@@ -8,6 +8,20 @@ var customerSchema = new mongoose.Schema({
     userId: String,
     age: Number,
     portfolioId: String,
-    retirementStatus: String
-
+    retirementStatus: String,
+    initialInvestmentAmount: { type: Number, required: true, default: 0 },
+    maxLossPercentage: { type: Number, required: true, default: 0 },
+    expectedReturn: { type: Number, required: true, default: 0 },
+    investmentHorizon: { type: Number, required: true, default: 1 },
+    totalRiskScore: { type: Number, required: true, default: 1 }
 })
+
+customerSchema.plugin(autoIncrement.plugin, { model: 'customer', field: 'cif', startAt: 1000 })
+
+customerSchema.query.byLoginId = function (userId) {
+    return this.find({ userId: userId });
+}
+
+var customerModel = mongoose.model('customer', customerSchema, 'customer')
+
+module.exports = customerModel
