@@ -10,6 +10,10 @@ var stockMasterSchema = new mongoose.Schema({
     date: Date
 })
 
+stockMasterSchema.query.byTickers = function (tickers) {
+    return this.find({ 'ticker': { $in: tickers } })
+}
+
 var stockMasterModel = mongoose.model('stockMaster', stockMasterSchema, 'stockMaster');
 module.exports = stockMasterModel;
 
