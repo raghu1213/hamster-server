@@ -9,7 +9,8 @@ export default class Customer {
 
     getStockCompostionSummary(riskScore) {
         let pp = new PortfolioPredictor()
-        return pp.getRiskAdjustedPortfolio(riskScore, this.getRiskCategory(riskScore))
+        let suggestedPortfolio = pp.getRiskAdjustedPortfolio(riskScore, this.getRiskCategory(riskScore))
+        return suggestedPortfolio;
     }
     getRiskCategory(riskScore) {
         if (riskScore <= 15) {

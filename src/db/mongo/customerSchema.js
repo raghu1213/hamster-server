@@ -11,7 +11,7 @@ var customerSchema = new mongoose.Schema({
     investmentKnowledge: String,
     investmentExperience: String,
     expectedReturn: String,
-    investmentHorizon: { type: Number, required: true, default: 5 },
+    investmentHorizon: String,
     reactionToFluctuations: String,
     totalRiskScore: { type: Number, required: true, default: 1 },
     riskCategory: String

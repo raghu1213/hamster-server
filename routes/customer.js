@@ -6,7 +6,6 @@ import PortfolioWeight from '../src/predictor/portfolio';
 
 let customerRiskPredictor = new CustomerPredict()
 
-
 router.get('/all', async function (req, res) {
     let result = await customerSchema.find().exec();
     res.json(result);
@@ -26,13 +25,14 @@ router.get('/get/', async function (req, res) {
 router.post('/insert', async function (req, res) {
     let reqCustomer = req.body;
     console.log('Request-->' + JSON.stringify(reqCustomer))
+
     let existing = await customerSchema.find().byLoginId(reqCustomer.userId).exec()
 
     let response;
     if (existing != null && existing != undefined && existing.length <= 0) {
         let riskScore = await customerRiskPredictor.getRiskScore(reqCustomer);
+        let riskCategory = customerRiskPredictor.getRiskCategory(riskScore);
         let newCustomer = new customerSchema({
-
             userId: reqCustomer.userId,
             portfolioId: reqCustomer.portfolioId,
             age: reqCustomer.age,
@@ -42,16 +42,16 @@ router.post('/insert', async function (req, res) {
             investmentHorizon: reqCustomer.investmentHorizon,
             reactionToFluctuations: reqCustomer.reactionToFluctuations,
             totalRiskScore: riskScore,
-            riskCategory: customerRiskPredictor.getRiskCategory(riskScore)
+            riskCategory: riskCategory
         })
 
-        newCustomer.save((err, data) => {
+        newCustomer.save(async (err, data) => {
             if (err) {
                 console.log(err);
                 res.send(err);
             }
-            // let portfolioSuggest = customerRiskPredictor.getStockCompostionSummary(riskScore);
-            response = { customer: data, portfolio: {} };
+            let suggestedPortfolio = await customerRiskPredictor.getStockCompostionSummary(riskScore);
+            response = { customer: data, portfolio: suggestedPortfolio };
             console.log(JSON.stringify(response))
             res.send(response);
         })
@@ -60,7 +60,6 @@ router.post('/insert', async function (req, res) {
         response = { message: "Duplicate" };
         res.send(response);
     }
-
 })
 
 
@@ -88,8 +87,9 @@ router.post('/update', async function (req, res) {
 
         },
         { upsert: true, 'new': true },//fetch the updated
-        function (err, updatedObject) {
-            res.json({ customer: updatedObject, portfolio: customerRiskPredictor.getStockCompostionSummary(riskScore) });
+        async function (err, updatedObject) {
+            suggestedPortfolio = await customerRiskPredictor.getStockCompostionSummary(riskScore);
+            res.json({ customer: updatedObject, portfolio: suggestedPortfolio });
         })
 
 })
