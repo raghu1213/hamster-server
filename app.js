@@ -10,6 +10,7 @@ var index = require('./routes/index');
 var stock = require('./routes/stock');
 var customer = require('./routes/customer');
 var test = require('./routes/test');
+var portfolio = require('./routes/portfolio');
 
 
 
@@ -25,6 +26,7 @@ app.use('/', index);
 app.use('/stock', stock);
 app.use('/customer', customer);
 app.use('/test', test);
+app.use('/portfolio', portfolio);
 
 
 // catch 404 and forward to error handler
