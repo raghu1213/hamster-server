@@ -6,13 +6,13 @@ autoIncrement.initialize(mongoose.connection)
 var customerSchema = new mongoose.Schema({
     cif: { type: Number, ref: 'cif' },
     userId: String,
-    age: Number,
     portfolioId: String,
-    retirementStatus: String,
-    initialInvestmentAmount: { type: Number, required: true, default: 0 },
-    maxLossPercentage: { type: Number, required: true, default: 0 },
-    expectedReturn: { type: Number, required: true, default: 0 },
-    investmentHorizon: { type: Number, required: true, default: 1 },
+    age: Number,
+    investmentKnowledge: String,
+    investmentExperience: String,
+    expectedReturn: String,
+    investmentHorizon: { type: Number, required: true, default: 5 },
+    reactionToFluctuations: String,  
     totalRiskScore: { type: Number, required: true, default: 1 }
 })
 
