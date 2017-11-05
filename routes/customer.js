@@ -25,8 +25,10 @@ router.get('/get/', async function (req, res) {
 
 router.post('/insert', async function (req, res) {
     let reqCustomer = req.body;
+    console.log('Request-->' + JSON.stringify(reqCustomer))
     let existing = await customerSchema.find().byLoginId(reqCustomer.userId).exec()
 
+    let response;
     if (existing != null && existing != undefined && existing.length <= 0) {
         let riskScore = await customerRiskPredictor.getRiskScore(reqCustomer);
         let newCustomer = new customerSchema({
@@ -48,11 +50,17 @@ router.post('/insert', async function (req, res) {
                 console.log(err);
                 res.send(err);
             }
-            res.json({ customer: data, portfolio: customerRiskPredictor.getStockCompostionSummary(riskScore) });
+            // let portfolioSuggest = customerRiskPredictor.getStockCompostionSummary(riskScore);
+            response = { customer: data, portfolio: {} };
+            console.log(JSON.stringify(response))
+            res.send(response);
         })
     } else {
-        res.send("Duplicate")
+        res.status(400)
+        response = { message: "Duplicate" };
+        res.send(response);
     }
+
 })
 
 
