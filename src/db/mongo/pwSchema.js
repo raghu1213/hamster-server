@@ -9,8 +9,8 @@ var pwSchema = new mongoose.Schema({
     mfFIPercent: Number,
     mfEqPercent: Number,
     mfMixedPercent: Number,
-    cash: Number,
-    mfPercent: Number
+    cash: Number
+   
 })
 
 var pwModel = mongoose.model('portfolioWeight', pwSchema, 'portfolioWeight');

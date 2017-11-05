@@ -12,8 +12,9 @@ var customerSchema = new mongoose.Schema({
     investmentExperience: String,
     expectedReturn: String,
     investmentHorizon: { type: Number, required: true, default: 5 },
-    reactionToFluctuations: String,  
-    totalRiskScore: { type: Number, required: true, default: 1 }
+    reactionToFluctuations: String,
+    totalRiskScore: { type: Number, required: true, default: 1 },
+    riskCategory: String
 })
 
 customerSchema.plugin(autoIncrement.plugin, { model: 'customer', field: 'cif', startAt: 1000 })
