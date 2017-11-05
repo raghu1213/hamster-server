@@ -71,6 +71,8 @@ router.post('/update', async function (req, res) {
             message: 'CIF is not defined! Please provide a CIF'
         });
     }
+    let riskScore = await customerRiskPredictor.getRiskScore(reqCustomer)
+    let riskCategory = customerRiskPredictor.getRiskCategory(riskScore)
     await customerSchema.findOneAndUpdate(
         { "cif": reqCustomer.cif },//find this
         {
@@ -82,13 +84,13 @@ router.post('/update', async function (req, res) {
             expectedReturn: reqCustomer.expectedReturn,
             investmentHorizon: reqCustomer.investmentHorizon,
             reactionToFluctuations: reqCustomer.reactionToFluctuations,
-            totalRiskScore: await customerRiskPredictor.getRiskScore(reqCustomer),
-            riskCategory: customerRiskPredictor.getRiskCategory(riskScore)
+            totalRiskScore: riskScore,
+            riskCategory: riskCategory
 
         },
         { upsert: true, 'new': true },//fetch the updated
         async function (err, updatedObject) {
-            suggestedPortfolio = await customerRiskPredictor.getStockCompostionSummary(riskScore);
+            let suggestedPortfolio = await customerRiskPredictor.getStockCompostionSummary(riskScore);
             res.json({ customer: updatedObject, portfolio: suggestedPortfolio });
         })
 

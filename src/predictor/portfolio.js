@@ -20,21 +20,11 @@ export default class Portfolio {
         let median = this.getMedian(riskCategory);
         let distance = 0
         var portfolioWeight = await PwSchema.findOne({ 'profile': riskCategory }).exec();
-
         distance = riskScore - median
-
-        if (distance > 0) {
-            portfolioWeight.stockPercent = portfolioWeight.stockPercent + (portfolioWeight.stockPercent * 0.8);
-            portfolioWeight.bondPercent = portfolioWeight.bondPercent + (portfolioWeight.bondPercent * -0.8)
-            portfolioWeight.etfPercent = portfolioWeight.etfPercent + (portfolioWeight.bondPercent * 0.2);
-            portfolioWeight.cash = portfolioWeight.cash + (portfolioWeight.bondPercent * -0.2);
-        }
-        else {
-            portfolioWeight.stockPercent = portfolioWeight.stockPercent + (portfolioWeight.stockPercent * -0.8);
-            portfolioWeight.bondPercent = portfolioWeight.bondPercent + (portfolioWeight.bondPercent * 0.8)
-            portfolioWeight.etfPercent = portfolioWeight.etfPercent + (portfolioWeight.bondPercent * -0.2);
-            portfolioWeight.cash = portfolioWeight.cash + (portfolioWeight.bondPercent * 0.2);
-        }
+        portfolioWeight.stockPercent = portfolioWeight.stockPercent + (distance * 0.8);
+        portfolioWeight.etfPercent = portfolioWeight.etfPercent + (distance * 0.2);
+        portfolioWeight.bondPercent = portfolioWeight.bondPercent + (distance * -0.8)
+        portfolioWeight.cash = portfolioWeight.cash + (distance * -0.2);
         return portfolioWeight;
     }
 }

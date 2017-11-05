@@ -7,9 +7,9 @@ export default class Customer {
 
     }
 
-    getStockCompostionSummary(riskScore) {
+    async getStockCompostionSummary(riskScore) {
         let pp = new PortfolioPredictor()
-        let suggestedPortfolio = pp.getRiskAdjustedPortfolio(riskScore, this.getRiskCategory(riskScore))
+        let suggestedPortfolio = await pp.getRiskAdjustedPortfolio(riskScore, this.getRiskCategory(riskScore))
         return suggestedPortfolio;
     }
     getRiskCategory(riskScore) {
