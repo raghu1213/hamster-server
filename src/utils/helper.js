@@ -1,4 +1,4 @@
-export default function getRiskCategory(riskScore) {
+export function getRiskCategory(riskScore) {
     if (riskScore <= 15) {
         return "conservative"
     }
@@ -10,7 +10,7 @@ export default function getRiskCategory(riskScore) {
     }
 }
 
-export default function formatPortfolio(suggestedPortfolio) {
+export function formatPortfolio(suggestedPortfolio) {
     let arr = [];
     arr.push({ STOCK: suggestedPortfolio.stockPercent })
     arr.push({ ETF: suggestedPortfolio.etfPercent })

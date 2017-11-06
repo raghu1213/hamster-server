@@ -1,4 +1,5 @@
 import PortfolioPredict from "../src/predictor/portfolio";
+import * as Helpers from '../src/utils/helper'
 
 var express = require('express');
 var router = express.Router();

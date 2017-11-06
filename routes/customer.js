@@ -22,7 +22,7 @@ router.get('/get/:loginId', async function (req, res) {
     res.json(result);
 })
 
-router.get('/riskscore', async function (req, res) {
+router.post('/riskscore', async function (req, res) {
     let reqCustomer = req.body;
     if(reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0 )
     {
@@ -30,7 +30,7 @@ router.get('/riskscore', async function (req, res) {
     }
 
     var riskPredictor = new RiskPredictor();
-    var riskScore = riskPredictor.getRiskScore(reqCustomer)
+    var riskScore = await riskPredictor.getRiskScore(reqCustomer)
     logger.log("Sending response--> " + riskScore);
     res.json({totalRiskScore: riskScore});
 })
