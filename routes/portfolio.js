@@ -5,6 +5,7 @@ import Logger from '../src/utils/logging'
 var express = require('express');
 var router = express.Router();
 var PortfolioWeightSchema = require('../src/db/mongo/pwSchema');
+import PortfolioBatch from '../src/batchs/stockSelectionSimulator';
 
 var logger = new Logger()
 
@@ -35,10 +36,15 @@ router.get('/suggest/:riskscore', async function (req, res, next) {
     let porfolioPredict = new PortfolioPredict();
     let suggestedPortfolio = await porfolioPredict.getRiskAdjustedPortfolio(req.params.riskscore)
 
-    suggestedPortfolio =  Helpers.formatPortfolio(suggestedPortfolio)
+    suggestedPortfolio = Helpers.formatPortfolio(suggestedPortfolio)
 
     logger.log("Update Respose-->" + JSON.stringify(suggestedPortfolio))
     res.json(suggestedPortfolio);
+})
+router.get('/compose/:riskscore/:amount', async function (req, res, next) {
+    var batch = new PortfolioBatch();
+    let result = await batch.pickupStocks(req.params.amount, req.params.riskscore);
+    return res.send(JSON.stringify(result));
 })
 
 
