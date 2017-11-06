@@ -1,6 +1,7 @@
 var mongoose = require('mongoose')
 var questionareSchema = require('../db/mongo/questionareSchema');
 import PortfolioPredictor from './portfolio'
+import Helper from '../utils/helper'
 
 export default class Customer {
     constructor() {
@@ -9,20 +10,10 @@ export default class Customer {
 
     async getStockCompostionSummary(riskScore) {
         let pp = new PortfolioPredictor()
-        let suggestedPortfolio = await pp.getRiskAdjustedPortfolio(riskScore, this.getRiskCategory(riskScore))
+        let suggestedPortfolio = await pp.getRiskAdjustedPortfolio(riskScore)
         return suggestedPortfolio;
     }
-    getRiskCategory(riskScore) {
-        if (riskScore <= 15) {
-            return "conservative"
-        }
-        else if (riskScore > 15 && riskScore <= 35) {
-            return "balanced"
-        }
-        else {
-            return "highGrowth"
-        }
-    }
+
 
     async getRiskScore(customer) {
 

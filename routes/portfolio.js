@@ -1,3 +1,5 @@
+import PortfolioPredict from "../src/predictor/portfolio";
+
 var express = require('express');
 var router = express.Router();
 var PortfolioWeightSchema = require('../src/db/mongo/pwSchema');
@@ -23,6 +25,17 @@ router.get('/suggest/summary', async function (req, res, next) {
         mungedResults.push(mungedResult)
     }
     res.json(mungedResults);
+})
+
+router.get('/suggest/:riskscore', async function (req, res, next) {
+
+    let porfolioPredict = new PortfolioPredict();
+    let suggestedPortfolio = porfolioPredict.getRiskAdjustedPortfolio(req.params.riskscore)
+
+    suggestedPortfolio = Helpers.formatPortfolio(suggestedPortfolio)
+
+    logger.log("Update Respose-->" + JSON.stringify(suggestedPortfolio))
+    res.json(suggestedPortfolio);
 })
 
 

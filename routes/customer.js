@@ -5,6 +5,7 @@ import CustomerPredict from '../src/predictor/customer';
 import PortfolioWeight from '../src/predictor/portfolio';
 import CustomerSchema from '../src/db/mongo/customerSchema';
 import Logger from '../src/utils/logging'
+import * as Helpers from '../src/utils/helper'
 
 let util = new Utils();
 let logger = new Logger();
@@ -25,6 +26,11 @@ router.get('/get/:loginId', async function (req, res) {
 router.post('/insert', async function (req, res) {
     let reqCustomer = req.body;
     logger.log('Request-->' + JSON.stringify(reqCustomer))
+
+    if(reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0 )
+    {
+        res.json('Invalid Customer data')
+    }
 
     let existing = await CustomerSchema.find().byLoginId(reqCustomer.userId).exec()
     if (existing != undefined && existing.length > 0) {
@@ -88,7 +94,7 @@ router.post('/update', async function (req, res) {
         { upsert: true, 'new': true },//fetch the updated
         async function (err, updatedObject) {
             let suggestedPortfolio = await customerRiskPredictor.getStockCompostionSummary(riskScore);
-            suggestedPortfolio = formatPortfolio(suggestedPortfolio)
+            suggestedPortfolio = Helpers.formatPortfolio(suggestedPortfolio)
             let response = { customer: updatedObject, portfolio: suggestedPortfolio }
 
             logger.log("Update Respose-->" + JSON.stringify(response))
@@ -96,17 +102,6 @@ router.post('/update', async function (req, res) {
         })
 })
 
-function formatPortfolio(suggestedPortfolio) {
-    let arr = [];
-    arr.push({ STOCK: suggestedPortfolio.stockPercent })
-    arr.push({ ETF: suggestedPortfolio.etfPercent })
-    arr.push({ MFEQ: suggestedPortfolio.mfEqPercent })
-    arr.push({ BOND: suggestedPortfolio.bondPercent })
-    arr.push({ MFFI: suggestedPortfolio.mfFIPercent })
-    arr.push({ MFMIX: suggestedPortfolio.mfMixedPercent })
-    arr.push({ CASH: suggestedPortfolio.cash })
-    return ({ profile: suggestedPortfolio.profile, distribution: arr });
 
-}
 
 module.exports = router;

@@ -1,5 +1,6 @@
 var PwSchema = require('../db/mongo/pwSchema')
 import Logger from '../utils/logging'
+import * as Helpers from '../utils/helper'
 
 let logger = new Logger();
 
@@ -19,8 +20,10 @@ export default class Portfolio {
         }
     }
 
-    async getRiskAdjustedPortfolio(riskScore, riskCategory) {
+    async getRiskAdjustedPortfolio(riskScore) {
         try {
+            let riskCategory = Helpers.getRiskCategory(riskScore)
+
             let median = this.getMedian(riskCategory);
             let distance = 0
             var portfolioWeight = await PwSchema.findOne({ 'profile': riskCategory }).exec();
