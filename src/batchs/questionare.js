@@ -2,7 +2,7 @@ var Questionare = []
 Questionare.push({
     question: "age",
     options: [
-        { option: "20-30", weight: 10 },
+        { option: "0-30", weight: 10 },
         { option: "30-40", weight: 8 },
         { option: "40-50", weight: 7 },
         { option: "50-60", weight: 6 },
