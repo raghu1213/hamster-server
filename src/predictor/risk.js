@@ -1,5 +1,6 @@
 import Questionare from '../batchs/questionare'
-
+import Logger from '../utils/logging'
+var logger = new Logger();
 export default class Risk {
     constructor() {
 
@@ -7,33 +8,46 @@ export default class Risk {
 
     async getRiskScore(customer) {
 
-
+        logger.log("Calculating risk score...")
         let score = 0;
         for (let obj of Questionare) {
             let optionScore
             if (obj.question === 'age') {
                 let ageRanges = obj.options
-                score = score + this._getScoreFromRange(customer.age, ageRanges)
+                let ageScore = this._getScoreFromRange(customer.age, ageRanges);
+                logger.log("Age-->" + ageScore);
+                score = score + ageScore;
             }
             else if (obj.question === 'investmentKnowledge') {
                 let knowledgeOptions = obj.options;
-                score = score + this._getScoreFromDirectMatch(customer.investmentKnowledge, knowledgeOptions)
+                let knowledgeScore = this._getScoreFromDirectMatch(customer.investmentKnowledge, knowledgeOptions);
+                logger.log("investmentKnowledge-->" + knowledgeScore);
+                score = score + knowledgeScore;
             }
             else if (obj.question === 'investmentExperience') {
                 let expOptions = obj.options;
-                score = score + this._getScoreFromDirectMatch(customer.investmentExperience, expOptions)
+                let investmentScore = this._getScoreFromDirectMatch(customer.investmentExperience, expOptions);
+                logger.log("investmentExperience-->" + investmentScore);
+                score = score + investmentScore
             }
             else if (obj.question === 'expectedReturn') {
                 let returnOptions = obj.options;
-                score = score + this._getScoreFromDirectMatch(customer.expectedReturn, returnOptions)
+                let returnScore = this._getScoreFromDirectMatch(customer.expectedReturn, returnOptions)
+                logger.log("expectedReturn-->" + returnScore);
+
+                score = score + returnScore;
             }
             else if (obj.question === 'investmentHorizon') {
                 let horizonOption = obj.options;
-                score = score + this._getScoreFromRange(customer.investmentHorizon, horizonOption)
+                let horizonScore = this._getScoreFromRange(customer.investmentHorizon, horizonOption)
+                logger.log("investmentHorizon-->" + horizonScore);
+                score = score + horizonScore;
             }
             else if (obj.question === 'reactionToFluctuations') {
                 let fluctuationOption = obj.options;
-                score = score + this._getScoreFromDirectMatch(customer.reactionToFluctuations, fluctuationOption)
+                let fluctuationScore = this._getScoreFromDirectMatch(customer.reactionToFluctuations, fluctuationOption)
+                logger.log("reactionToFluctuations-->" + fluctuationScore);
+                score = score + fluctuationScore
             }
         }
         return score;
