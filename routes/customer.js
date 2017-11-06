@@ -32,7 +32,7 @@ router.get('/riskscore', async function (req, res) {
     var riskPredictor = new RiskPredictor();
     var riskScore = riskPredictor.getRiskScore(reqCustomer)
     logger.log("Sending response--> " + riskScore);
-    res.json(riskScore);
+    res.json({totalRiskScore: riskScore});
 })
 
 router.post('/insert', async function (req, res) {
