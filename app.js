@@ -58,8 +58,7 @@ connectMongo();
 function connectMongo() {
   'use strict'
   let options = { server: { socketOptions: { keepAlive: 1 }, reconnectTries: 3 } }
-  mongoose.promise = global.Promise
-
+  mongoose.Promise = global.Promise
   mongoose.connection.on("open", (ref) => {
     console.log("Connected to mongo db")
   })
