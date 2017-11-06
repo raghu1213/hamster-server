@@ -1,7 +1,7 @@
 var mongoose = require('mongoose')
 
 var stockMasterSchema = new mongoose.Schema({
-    symbol: String,
+    ticker: String,
     name: String,
     marketCapital: Number,
     ipoYear: String,
