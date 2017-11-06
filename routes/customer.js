@@ -1,15 +1,14 @@
 var express = require('express');
 var router = express.Router();
 import Utils from './utils'
-import CustomerPredict from '../src/predictor/customer';
+import CustomerPredict from '../src/predictor/risk';
 import PortfolioWeight from '../src/predictor/portfolio';
 import CustomerSchema from '../src/db/mongo/customerSchema';
 import Logger from '../src/utils/logging'
-import * as Helpers from '../src/utils/helper'
+import RiskPredictor from '../src/predictor/risk'
 
 let util = new Utils();
 let logger = new Logger();
-let customerRiskPredictor = new CustomerPredict();
 
 router.get('/all', async function (req, res) {
     let result = await customerSchema.find().exec();
@@ -23,13 +22,26 @@ router.get('/get/:loginId', async function (req, res) {
     res.json(result);
 })
 
+router.get('/riskscore', async function (req, res) {
+    let reqCustomer = req.body;
+    if(reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0 )
+    {
+        res.json('Invalid Risk data')
+    }
+
+    var riskPredictor = new RiskPredictor();
+    var riskScore = riskPredictor.getRiskScore(reqCustomer)
+    logger.log("Sending response--> " + riskScore);
+    res.json(riskScore);
+})
+
 router.post('/insert', async function (req, res) {
     let reqCustomer = req.body;
     logger.log('Request-->' + JSON.stringify(reqCustomer))
 
     if(reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0 )
     {
-        res.json('Invalid Customer data')
+        res.json('Invalid Risk data')
     }
 
     let existing = await CustomerSchema.find().byLoginId(reqCustomer.userId).exec()
@@ -38,8 +50,6 @@ router.post('/insert', async function (req, res) {
         return util.errorRespose(res, "Login id already exist!");
     }
 
-    let riskScore = await customerRiskPredictor.getRiskScore(reqCustomer);
-    let riskCategory = customerRiskPredictor.getRiskCategory(riskScore);
     let newCustomer = new CustomerSchema({
         userId: reqCustomer.userId,
         portfolioId: reqCustomer.portfolioId,
@@ -49,18 +59,15 @@ router.post('/insert', async function (req, res) {
         expectedReturn: reqCustomer.expectedReturn,
         investmentHorizon: reqCustomer.investmentHorizon,
         reactionToFluctuations: reqCustomer.reactionToFluctuations,
-        totalRiskScore: riskScore,
-        riskCategory: riskCategory
+        totalRiskScore: reqCustomer.totalRiskScore,
+        riskCategory: reqCustomer.riskCategory
     })
     newCustomer.save(async (err, data) => {
         if (err) {
             return util.errorRespose(res, err);
         }
-        logger.log("Customer created-->" + data)
-        let suggestedPortfolio = await customerRiskPredictor.getStockCompostionSummary(riskScore);
-        logger.log("Suggested portfolio-->" + suggestedPortfolio)
-        suggestedPortfolio = formatPortfolio(suggestedPortfolio)
-        let response = { customer: data, portfolio: suggestedPortfolio };
+        logger.log("Risk created-->" + data)
+        let response = { customer: data};
         logger.log(JSON.stringify(response))
         res.send(response);
     })
@@ -74,9 +81,8 @@ router.post('/update', async function (req, res) {
     if (reqCustomer.cif == undefined) {
         return util.errorRespose(res, "CIF is not defined! Please provide a CIF")
     }
-    logger.log("Customer to update-->" + JSON.stringify(reqCustomer))
-    let riskScore = await customerRiskPredictor.getRiskScore(reqCustomer)
-    let riskCategory = customerRiskPredictor.getRiskCategory(riskScore)
+    logger.log("Risk to update-->" + JSON.stringify(reqCustomer))
+
     await CustomerSchema.findOneAndUpdate(
         { "cif": reqCustomer.cif },//find this
         {
@@ -88,15 +94,12 @@ router.post('/update', async function (req, res) {
             expectedReturn: reqCustomer.expectedReturn,
             investmentHorizon: reqCustomer.investmentHorizon,
             reactionToFluctuations: reqCustomer.reactionToFluctuations,
-            totalRiskScore: riskScore,
-            riskCategory: riskCategory
+            totalRiskScore: reqCustomer.totalRiskScore,
+            riskCategory: reqCustomer.riskCategory
         },
         { upsert: true, 'new': true },//fetch the updated
         async function (err, updatedObject) {
-            let suggestedPortfolio = await customerRiskPredictor.getStockCompostionSummary(riskScore);
-            suggestedPortfolio = Helpers.formatPortfolio(suggestedPortfolio)
-            let response = { customer: updatedObject, portfolio: suggestedPortfolio }
-
+            let response = { customer: updatedObject}
             logger.log("Update Respose-->" + JSON.stringify(response))
             res.json(response);
         })

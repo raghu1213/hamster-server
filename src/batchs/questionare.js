@@ -1,13 +1,5 @@
-var mongoose = require('mongoose')
-var questionareSchema = require('../db/mongo/questionareSchema')
-var env = require('../../env')
-
-console.log('STARTING INSERT')
-let mongoURL = env.mongoDB//"mongodb://127.0.0.1:27017/hamsterdb";
-mongoose.connect(mongoURL, { useMongoClient: true })
-console.log('Connected to ' + mongoURL)
-console.log('----------------------------')
-let question1 = new questionareSchema({
+var Questionare = []
+Questionare.push({
     question: "age",
     options: [
         { option: "20-30", weight: 10 },
@@ -18,10 +10,7 @@ let question1 = new questionareSchema({
         { option: "70-200", weight: 3 },
     ]
 })
-question1.save();
-console.log('age')
-
-let question2 = new questionareSchema({
+Questionare.push({
     question: "investmentKnowledge",
     options: [
         { option: "none", weight: 1 },
@@ -29,10 +18,8 @@ let question2 = new questionareSchema({
         { option: "extensive", weight: 5 }
     ]
 })
-question2.save();
-console.log('investmentKnowledge')
 
-let question3 = new questionareSchema({
+Questionare.push({
     question: "investmentExperience",
     options: [
         { option: "none", weight: 1 },
@@ -40,10 +27,8 @@ let question3 = new questionareSchema({
         { option: "extensive", weight: 5 }
     ]
 })
-question3.save();
-console.log('investmentExperience')
 
-let question4 = new questionareSchema({
+Questionare.push({
     question: "expectedReturn",
     options: [
         { option: "conservative", weight: 1 },
@@ -51,10 +36,7 @@ let question4 = new questionareSchema({
         { option: "aggressive", weight: 10 }
     ]
 })
-question4.save();
-console.log('expectedReturn')
-
-let question5 = new questionareSchema({
+Questionare.push({
     question: "investmentHorizon",
     options: [
         { option: "0-5", weight: 1 },
@@ -62,10 +44,8 @@ let question5 = new questionareSchema({
         { option: "10-200", weight: 10 }
     ]
 })
-question5.save();
-console.log('investmentHorizon')
 
-let question6 = new questionareSchema({
+Questionare.push({
     question: "reactionToFluctuation",
     options: [
         { option: "nervous", weight: 1 },
@@ -74,7 +54,5 @@ let question6 = new questionareSchema({
 
     ]
 })
-question6.save();
-console.log('reactionToFluctuation')
-console.log('----------------------------')
-console.log('COMPLETED')
+
+module.exports = Questionare

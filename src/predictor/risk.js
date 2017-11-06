@@ -1,25 +1,15 @@
-var mongoose = require('mongoose')
-var questionareSchema = require('../db/mongo/questionareSchema');
-import PortfolioPredictor from './portfolio'
-import Helper from '../utils/helper'
+import Questionare from '../batchs/questionare'
 
-export default class Customer {
+export default class Risk {
     constructor() {
 
     }
 
-    async getStockCompostionSummary(riskScore) {
-        let pp = new PortfolioPredictor()
-        let suggestedPortfolio = await pp.getRiskAdjustedPortfolio(riskScore)
-        return suggestedPortfolio;
-    }
-
-
     async getRiskScore(customer) {
 
-        let questions = await questionareSchema.find().exec()
+
         let score = 0;
-        for (let obj of questions) {
+        for (let obj of Questionare) {
             let optionScore
             if (obj.question === 'age') {
                 let ageRanges = obj.options
@@ -48,6 +38,7 @@ export default class Customer {
         }
         return score;
     }
+
     _getScoreFromRange(custData, options) {
         for (let item of options) {
             let range = item.option.split("-")
@@ -57,6 +48,7 @@ export default class Customer {
         }
         return 0;
     }
+
     _getScoreFromDirectMatch(custData, options) {
         for (let item of options) {
             if (item.option === custData) {
