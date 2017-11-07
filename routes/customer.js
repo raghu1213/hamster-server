@@ -6,7 +6,7 @@ import PortfolioWeight from '../src/predictor/portfolio';
 import CustomerSchema from '../src/db/mongo/customerSchema';
 import Logger from '../src/utils/logging'
 import RiskPredictor from '../src/predictor/risk'
-
+import * as Helper from '../src/utils/helper'
 let util = new Utils();
 let logger = new Logger();
 
@@ -47,7 +47,7 @@ router.post('/insert', async function (req, res) {
         logger.log(JSON.stringify(existing))
         return util.errorRespose(res, "Login id already exist!");
     }
-
+    let riskCategory = Helper.getRiskCategory(reqCustomer.totalRiskScore);
     let newCustomer = new CustomerSchema({
         userId: reqCustomer.userId,
         name: reqCustomer.name,
@@ -59,7 +59,7 @@ router.post('/insert', async function (req, res) {
         investmentHorizon: reqCustomer.investmentHorizon,
         reactionToFluctuations: reqCustomer.reactionToFluctuations,
         totalRiskScore: reqCustomer.totalRiskScore,
-        riskCategory: reqCustomer.riskCategory,
+        riskCategory: riskCategory,
         initialInvestmentAmount: reqCustomer.initialInvestmentAmount,
         mobileNumber: reqCustomer.mobileNumber
     })

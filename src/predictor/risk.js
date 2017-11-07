@@ -39,7 +39,7 @@ export default class Risk {
             }
             else if (obj.question === 'investmentHorizon') {
                 let horizonOption = obj.options;
-                let horizonScore = this._getScoreFromRange(customer.investmentHorizon, horizonOption)
+                let horizonScore = this._getScoreFromDirectMatch(customer.investmentHorizon, horizonOption)
                 logger.log("investmentHorizon-->" + horizonScore);
                 score = score + horizonScore;
             }
