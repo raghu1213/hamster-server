@@ -5,7 +5,7 @@ import Logger from '../src/utils/logging'
 var express = require('express');
 var router = express.Router();
 var PortfolioWeightSchema = require('../src/db/mongo/pwSchema');
-import PortfolioBatch from '../src/batchs/stockSelectionSimulator';
+import PortfolioBatch from '../src/predictor/assets';
 
 var logger = new Logger()
 
@@ -13,6 +13,8 @@ router.get('/suggest', async function (req, res, next) {
     let result = await PortfolioWeightSchema.find().exec()
     res.json(result);
 });
+
+
 
 router.get('/suggest/summary', async function (req, res, next) {
     let results = await PortfolioWeightSchema.find().exec()

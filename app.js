@@ -12,6 +12,7 @@ var customer = require('./routes/customer');
 var test = require('./routes/test');
 var portfolio = require('./routes/portfolio');
 var events = require('./routes/events');
+var transactions = require('./routes/transactions');
 
 
 
@@ -35,6 +36,7 @@ app.use('/customer', customer);
 app.use('/test', test);
 app.use('/portfolio', portfolio);
 app.use('/events', events)
+app.use('/transaction', transactions)
 
 
 // catch 404 and forward to error handler
