@@ -43,9 +43,9 @@ router.get('/suggest/:riskscore', async function (req, res, next) {
     logger.log("Update Respose-->" + JSON.stringify(suggestedPortfolio))
     res.json(suggestedPortfolio);
 })
-router.get('/compose/:riskscore/:amount/:cif', async function (req, res, next) {
+router.get('/compose/:riskscore/:amount', async function (req, res, next) {
     var batch = new PortfolioBatch();
-    let result = await batch.distribute(req.params.amount, req.params.riskscore, req.params.cif);
+    let result = await batch.distribute(req.params.amount, req.params.riskscore);
     return res.send(JSON.stringify(result));
 })
 

@@ -56,18 +56,18 @@ export default class StockComposition {
 
     async pickupBond(investmentAmount, riskScore, cif) {
         let bonds;
-        if (cif != undefined && cif != null) {
-            let customer = await CustomerDetails.findOne({ cif: cif }).exec();
-            let horizon = customer.investmentHorizon.split("-");
+        // if (cif != undefined && cif != null) {
+        //     let customer = await CustomerDetails.findOne({ cif: cif }).exec();
+        //     let horizon = customer.investmentHorizon.split("-");
 
-            let min = horizon[0]
-            let max = horizon[1]
+        //     let min = horizon[0]
+        //     let max = horizon[1]
 
-            bonds = await BondDetails.find({ 'maturityYearsFromToday': { $gte: min, $lte: max } }).sort({ "ytm": -1 }).exec();
-        }
-        if (bonds === undefined) {
-            bonds = await BondDetails.find().sort({ 'ytm': -1 }).exec();
-        }
+        //     bonds = await BondDetails.find({ 'maturityYearsFromToday': { $gte: min, $lte: max } }).sort({ "ytm": -1 }).exec();
+        // }
+        // if (bonds === undefined) {
+        bonds = await BondDetails.find().sort({ 'ytm': -1 }).exec();
+        // }
 
         let amountInvestedSoFar = await this.buyAndDistribute(bonds, investmentAmount, 'BOND');
         logger.log(`Bond amout To be invested ${investmentAmount}; Invested ${amountInvestedSoFar}`)
@@ -121,8 +121,14 @@ export default class StockComposition {
 
 
     async buyAndDistribute(listOfStocks, totalAmountToInvest, type) {
-        let stockNumber = 0;
+        
+        if (listOfStocks === undefined) return totalAmountToInvest;
+
+        //let stockNumber = 0;
         let amountInvestedSoFar = 0;
+        let passIndex = 0;
+        let reamainingAmount = totalAmountToInvest;
+        let stocksToVisit = Math.round(listOfStocks.length * .20)
         for (let i = 0; i < listOfStocks.length; i++) {
             let stock = listOfStocks[i]
 
@@ -143,26 +149,48 @@ export default class StockComposition {
             }
 
             if (stockPrice === 0) continue;
-            let amountToInvest = totalAmountToInvest * INVESTMENT_DIVERSIFICATION[stockNumber]
+            //let amountToInvest = totalAmountToInvest * INVESTMENT_DIVERSIFICATION[stockNumber]
+            let amountToInvest = this.findBestFit(listOfStocks.length, passIndex, reamainingAmount, stocksToVisit)
+            passIndex++;
             //let stockPrice = Math.floor((Math.random() * 5000) + 1);
             if (stockPrice > amountToInvest) {
                 continue;
             }
 
             let stockBought = Math.floor(amountToInvest / stockPrice);
+
             let investedAmount = stockBought * stockPrice
+
             amountInvestedSoFar += investedAmount
+            reamainingAmount -= amountInvestedSoFar;
+
             logger.log("Ticker:" + stock.ticker + ":stock price-->" + stockPrice + ":Amout allocated:" + investedAmount + ": Bought-->" + stockBought)
             let obj = { ticker: stock.ticker, quantity: stockBought, totalAmount: investedAmount, type: type, name: stock.name }
             this.Results.push(obj);
-            stockNumber++
-            if (stockNumber >= 4) {
+            if (reamainingAmount < 0)
+            {
                 break;
-            }
+            }    
+            // stockNumber++
+            // if (stockNumber >= 4) {
+            //     break;
+            // }
 
         }
         return amountInvestedSoFar;
     }
+    findBestFit(stockCount, passIndex, amount, stocksToVisit) {
+        if (passIndex == stocksToVisit) {
+            return amount;
+        }
+        if (stockCount < 10)
+            return amount / totalStockCount;
+
+        if (passIndex >= stocksToVisit)
+            return amount;
+        return amount * 0.3;
+    }
+
 }
 
 
