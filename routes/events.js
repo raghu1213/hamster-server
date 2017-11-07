@@ -82,8 +82,12 @@ router.post('/update', async function (req, res) {
 
 router.post('/confirmation', async function(req, res){
     logger.log(`recieved callback from nexmo : ${JSON.stringify(req.body)}`)
-    executeTransaction('1034', '1', 'B', '174', 'stock', 'AAPL', 100)
-    executeTransaction('1034', '1', 'S', '100', 'stock', 'ACN', 600)
+    let status = req.body.text.toLowerCase()
+    let clientMobile = req.body.msisdn
+    if(status === 'yes') {
+        executeTransaction('1034', '1', 'B', '174', 'stock', 'AAPL', 100)
+        executeTransaction('1034', '1', 'S', '100', 'stock', 'ACN', 600)
+    }
     res.send('recieved')
 })
 
