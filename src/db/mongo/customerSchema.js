@@ -4,9 +4,9 @@ var autoIncrement = require('mongoose-auto-increment')
 autoIncrement.initialize(mongoose.connection)
 
 var customerSchema = new mongoose.Schema({
-    cif:String,
+    cif: String,
     userId: String,
-    name:String,
+    name: String,
     portfolioId: String,
     age: Number,
     investmentKnowledge: String,
@@ -16,7 +16,7 @@ var customerSchema = new mongoose.Schema({
     reactionToFluctuations: String,
     totalRiskScore: { type: Number, required: true, default: 1 },
     riskCategory: String,
-    initialInvestmentAmount:Number,
+    initialInvestmentAmount: Number,
     mobileNumber: String
 })
 
