@@ -28,7 +28,8 @@ export default class EventProcessor {
         let portfolioId = clientDetails.portfolioId
 
         let netPortfolioPosition = this._netPortfolioPosition(initialPosition, clientTransactionData, stockEODData)
-
+        let portfolioAlertMsg = ''
+        let instrumentAlertMsg = ''
 
         if ((netPortfolioPosition > 0 && netPortfolioPosition >= portfolioAbove) ||
             (netPortfolioPosition < 0 && Math.abs(netPortfolioPosition) > portfolioBelow)) {
@@ -40,21 +41,20 @@ export default class EventProcessor {
                 upDownMessage = 'Up'
             }
 
-            let message = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Buy: ${buyInstruments[0].ticker} ${buyInstruments[0].units} Sell: ${sellInstruments[0].ticker} ${sellInstruments[0].units}. Please reply y/n`
-
-            await nexmo.message.sendSms('Noorul', clientMob, message, {}, 'https://hamster-server.herokuapp.com/events/confirmation')
+            portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Buy: ${buyInstruments[0].ticker} ${buyInstruments[0].units} Sell: ${sellInstruments[0].ticker} ${sellInstruments[0].units}. Please reply y/n`
 
 
-                /*(nexmoResponse) => {
-                logger.log(`sent Message to ${clientMob}, Message : ${message}`);
-                logger.log(nexmoResponse);
 
-                this._executeTransaction(cif, portfolioId, true, stockEODData.adj_Close, buyInstruments[0])
-                this._executeTransaction(cif, portfolioId, false, stockEODData.adj_Close, sellInstruments[0])
-            });*/
+            /*(nexmoResponse) => {
+            logger.log(`sent Message to ${clientMob}, Message : ${message}`);
+            logger.log(nexmoResponse);
+
+            this._executeTransaction(cif, portfolioId, true, stockEODData.adj_Close, buyInstruments[0])
+            this._executeTransaction(cif, portfolioId, false, stockEODData.adj_Close, sellInstruments[0])
+        });*/
         }
 
-        let netInstrumentPositions = this._netInstrumentPositions(clientTransactionData, stockEODData)
+        let netInstrumentPositions = this._netInstrumentPositions(clientTransactionData, instrumentAbove, instrumentBelow, stockEODData)
         let worstInstrument;
         let bestInstrument;
         for (let inst in netInstrumentPositions) {
@@ -74,6 +74,41 @@ export default class EventProcessor {
                 worstInstrument = inst;
             }
         }
+
+        if (netInstrumentPositions.length > 0) {
+
+            let instrumentAlertMsg = `Below Financial Instruments are above/below allowed limits.`
+            for(let instTemp in netInstrumentPositions){
+                let upDownMessage = 'Down'
+                if (instTemp.netPosition > 0) {
+                    upDownMessage = 'Up'
+                }
+
+                instrumentAlertMsg += ` ${instTemp.ticker} is UP by ${instTemp.netPosition}`
+            }
+
+            instrumentAlertMsg  += `Rebalance => Buy: ${netInstrumentPositions[0].ticker} Units: ${100} `
+
+
+
+        }
+
+        if(instrumentAlertMsg.length > 0) {
+            await nexmo.message.sendSms('601117000807', clientMob, instrumentAlertMsg, {}, (nexmoResponse) => {
+                logger.log(`sent Message to ${clientMob}, Message portfolio transaction : ${instrumentAlertMsg}, response: ${nexmoResponse}`);
+
+            });
+        }
+
+        if(portfolioAlertMsg.length > 0) {
+            await nexmo.message.sendSms('601117000807', clientMob, portfolioAlertMsg, {}, (nexmoResponse) => {
+                logger.log(`sent Message to ${clientMob}, Message instrument transaction: ${portfolioAlertMsg}, response: ${nexmoResponse}`);
+
+            });
+        }
+
+        //this._executeTransaction(cif, portfolioId, true, stockEODData.adj_Close, buyInstruments[0])
+        //this._executeTransaction(cif, portfolioId, false, stockEODData.adj_Close, sellInstruments[0])
     }
 
 
@@ -106,35 +141,26 @@ export default class EventProcessor {
         return -1
     }
 
-    _netInstrumentPositions(clientTransactionData, stockEODData){
-        return [{instrument:'AAPL', netPosition: -20}]
-    }
+    _netInstrumentPositions(clientTransactionData, above, below, stockEODData){
 
-    _executeTransaction(cif, portfolioId, isBuy, closePrice, transactionDetails){
-        let buySell = 'S'
-        if(isBuy) {
-            buySell = 'B'
+        let netPositionsToNotify = []
+        for(let clientTransact in clientTransactionData) {
+            let clientTrans = clientTransactionData[clientTransact]
+            let ticker = clientTrans.ticker
+            let eodPrice = this._getEODPriceForTicker(ticker, stockEODData)
+            if(eodPrice > 0) {
+                let absDiff = parseFloat(eodPrice) - parseFloat(clientTrans.unitPrice)
+                let diff = Math.abs(parseFloat(eodPrice) - parseFloat(clientTrans.unitPrice))
+                if(diff > above || diff > below) {
+                    netPositionsToNotify.push({ticker: ticker, netPosition: absDiff})
+                }
+            }
+
         }
 
-        let transaction = new ClientTranasctionSchema({
-            cif: cif,
-            portfolioId: portfolioId,
-            AssetType: transactionDetails.AssetType,
-            ticker: transactionDetails.ticker,
-            BuySell: buySell,
-            unitPrice: closePrice,
-            numberOfUnits: transactionDetails.units,
-            amount: parseInt(transactionDetails.units) * parseFloat(closePrice)
-        })
-
-        transaction.save(async (err, data) => {
-            if (err) {
-                logger.log(`unable to execute client transaction cif: ${cif}, portfolio: ${portfolioId}`)
-                return
-            }
-            logger.log("New Transaction executed-->" + data)
-            logger.log(JSON.stringify(data))
-        })
+        return netPositionsToNotify;
     }
+
+
 }
 

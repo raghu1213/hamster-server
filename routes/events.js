@@ -81,8 +81,10 @@ router.post('/update', async function (req, res) {
 })
 
 router.post('/confirmation', async function(req, res){
-    logger.log(`recieved callback from nexmo : ${req.body}`)
-    console.log(`recieved callback from nexmo : ${req.body}`)
+    logger.log(`recieved callback from nexmo : ${JSON.stringify(req.body)}`)
+    executeTransaction('1034', '1', 'B', '174', 'stock', 'AAPL', 100)
+    executeTransaction('1034', '1', 'S', '100', 'stock', 'ACN', 600)
+    res.send('recieved')
 })
 
 router.post('/process', async function (req, res) {
@@ -130,6 +132,33 @@ router.post('/process', async function (req, res) {
     res.json('events processed');
 })
 
+
+ function executeTransaction(cif, portfolioId, isBuy, closePrice, assetType, ticker, units){
+    let buySell = 'S'
+    if(isBuy) {
+        buySell = 'B'
+    }
+
+    let transaction = new ClientTransactionSchema({
+        cif: cif,
+        portfolioId: portfolioId,
+        AssetType: assetType,
+        ticker: ticker,
+        BuySell: buySell,
+        unitPrice: closePrice,
+        numberOfUnits: units,
+        amount: parseInt(units) * parseFloat(closePrice)
+    })
+
+    transaction.save(async (err, data) => {
+        if (err) {
+            logger.log(`unable to execute client transaction cif: ${cif}, portfolio: ${portfolioId}`)
+            return
+        }
+        logger.log("New Transaction executed-->" + data)
+        logger.log(JSON.stringify(data))
+    })
+}
 
 
 
