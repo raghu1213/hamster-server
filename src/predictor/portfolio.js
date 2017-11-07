@@ -1,13 +1,10 @@
 //var PwSchema = require('../db/mongo/pwSchema')
 import Logger from '../utils/logging'
 import * as Helpers from '../utils/helper'
-<<<<<<< HEAD
 import PortfolioWeight from '../batchs/pw'
-=======
 var ClientTranasctionSchema = require('../db/mongo/clientTransactionSchema');
 var StockTimeSeries = require('../db/mongo/stockTimeSeries')
 
->>>>>>> eb0ad23d6c0bf9d1982a43448a706cfad9913f56
 
 let logger = new Logger();
 
@@ -29,15 +26,15 @@ export default class Portfolio {
 
     async getPortfolioPositionAsOfToday(cif, portfolioId, prevDate, date) {
         var dict = {};
-        let transactions = await ClientTranasctionSchema.find().byCustomerAndPortfolio(cif, portfolioId).sort({"date": -1}).exec();
-        let stockDetails = await StockTimeSeries.find().byDateRange(prevDate, date).sort({"date": -1}).exec()
-        for(let trans in transactions) {
+        let transactions = await ClientTranasctionSchema.find().byCustomerAndPortfolio(cif, portfolioId).sort({ "date": -1 }).exec();
+        let stockDetails = await StockTimeSeries.find().byDateRange(prevDate, date).sort({ "date": -1 }).exec()
+        for (let trans in transactions) {
             let data = transactions[trans]
             let units = data.numberOfUnits
-            if(data.BuySell === 'S') {
+            if (data.BuySell === 'S') {
                 units = -units
             }
-            if(dict[data.ticker] === undefined || dict[data.ticker] === null) {
+            if (dict[data.ticker] === undefined || dict[data.ticker] === null) {
                 dict[data.ticker] = units
             }
             else {
@@ -46,7 +43,7 @@ export default class Portfolio {
         }
 
         let currentPosition = 0
-        for(let key in dict){
+        for (let key in dict) {
             let eodPrice = this._getEODPriceForTicker(key, stockDetails)
             currentPosition += parseInt(dict[key]) * parseFloat(eodPrice)
         }
@@ -55,13 +52,13 @@ export default class Portfolio {
 
     async getRealizedGain(cif, portfolioId) {
         var dict = {};
-        let transactions = await ClientTranasctionSchema.find().byCustomerAndPortfolio(cif, portfolioId).sort({"date": -1}).exec();
-        for(let trans in transactions) {
+        let transactions = await ClientTranasctionSchema.find().byCustomerAndPortfolio(cif, portfolioId).sort({ "date": -1 }).exec();
+        for (let trans in transactions) {
             let data = transactions[trans]
-            if(data.BuySell === 'B') {
+            if (data.BuySell === 'B') {
                 continue
             }
-            if(dict[data.ticker] === undefined || dict[data.ticker] === null) {
+            if (dict[data.ticker] === undefined || dict[data.ticker] === null) {
                 dict[data.ticker] = parseInt(data.numberOfUnits) * parseFloat(data.unitPrice)
             }
             else {
@@ -70,7 +67,7 @@ export default class Portfolio {
         }
 
         let realizedGain = 0
-        for(let key in dict){
+        for (let key in dict) {
             realizedGain += dict[key]
         }
         return realizedGain
@@ -85,11 +82,10 @@ export default class Portfolio {
             //var portfolioWeight = await PwSchema.findOne({ 'profile': riskCategory }).exec();
             var portfolioWeight;
             for (let pw of PortfolioWeight) {
-                if (pw.profile === riskCategory)
-                {
+                if (pw.profile === riskCategory) {
                     portfolioWeight = pw;
                     break;
-                }    
+                }
             }
 
 
@@ -109,9 +105,9 @@ export default class Portfolio {
         return portfolioWeight;
     }
 
-    _getEODPriceForTicker(ticker, stockEODData){
-        for(let stockIndex in stockEODData) {
-            if(stockEODData[stockIndex].ticker.toLowerCase() === ticker.toLowerCase()){
+    _getEODPriceForTicker(ticker, stockEODData) {
+        for (let stockIndex in stockEODData) {
+            if (stockEODData[stockIndex].ticker.toLowerCase() === ticker.toLowerCase()) {
                 return parseFloat(stockEODData[stockIndex].close)
             }
         }
