@@ -3,8 +3,8 @@ require('fetch-retry')
 
 
 export default class QuandlQuery {
-    constructor() {
-        this.query = "?api_key=c-LWekLJ1yK23yk4WXAQ&start_date=2016-01-01";
+    constructor(date) {
+        this.query = "?api_key=c-LWekLJ1yK23yk4WXAQ&start_date=" + date;
     }
 
 

@@ -15,8 +15,8 @@ router.get('/mongodb', function (req, res, next) {
     mongoose.connect(env.mongoDB, { useMongoClient: true })
 });
 
-router.post('/insertEod', async function (req, res) {
-    await eodBatch();
+router.post('/insertEod/:date', async function (req, res) {
+    await eodBatch(req.params.date);
     res.send("Success");
 })
 
