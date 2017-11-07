@@ -22,10 +22,12 @@
     "debug": "~2.6.3",
     "es2015": "0.0.0",
     "express": "~4.15.2",
+    "fetch-retry": "^1.1.1",
     "mongoose": "^4.13.0",
     "mongoose-auto-increment": "^5.0.1",
     "morgan": "~1.8.1",
-    "nodemon": "^1.12.1"
+    "nodemon": "^1.12.1",
+    "sync-rest-client": "^1.0.3"
   },
   "description": "hamster-server",
   "main": "./bin/www",
