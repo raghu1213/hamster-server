@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var mongoose = require('mongoose');
 var env = require('../env');
+import eodBatch from '../src/batchs/insertEodTimeSeries'
 /* GET home page. */
 router.get('/mongodb', function (req, res, next) {
 
@@ -13,5 +14,10 @@ router.get('/mongodb', function (req, res, next) {
     })
     mongoose.connect(env.mongoDB, { useMongoClient: true })
 });
+
+router.post('/insertEod', async function (req, res) {
+    await eodBatch();
+    res.send("Success");
+})
 
 module.exports = router;

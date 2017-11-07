@@ -1,9 +1,11 @@
 require('fetch-retry')
+const syncClient = require('sync-rest-client');
+
 
 
 export default class QuandlQuery {
     constructor() {
-        this.query = "?api_key=c-LWekLJ1yK23yk4WXAQ&start_date=2015-01-01";
+        this.query = "?api_key=c-LWekLJ1yK23yk4WXAQ&start_date=2016-01-01";
     }
 
 
@@ -26,5 +28,6 @@ export default class QuandlQuery {
                 'Content-Type': 'application/json'
             }
         }).then(o => { return o.json() });
+
     }
 }    
