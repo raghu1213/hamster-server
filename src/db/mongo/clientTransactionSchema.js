@@ -5,6 +5,8 @@ var autoIncrement = require('mongoose-auto-increment')
 var cleintTransactionSchemaDef = new mongoose.Schema({
     cif: String,
     portfolioId: String,
+    mobileNumber:String,
+    txnStatus:{type:String},
     txnNumber:Number,
     txnDate:{ type : Date, default: Date.now },
     AssetType:String,
@@ -22,22 +24,23 @@ cleintTransactionSchemaDef.plugin(autoIncrement.plugin, {
     incrementBy: 1});
 
 cleintTransactionSchemaDef.query.byCustomerAndPortfolio = function (cif, portfolioId) {
-    return this.find({ cif: cif, portfolioId: portfolioId });
+    return this.find({ cif: cif, portfolioId: portfolioId , txnStatus: 'completed'});
+}
+
+cleintTransactionSchemaDef.query.pendingTransactionByMobileNumberTickerAndBuySell = function (mobileNumber, ticker, buySell) {
+    return this.find({ mobileNumber: mobileNumber, ticker: ticker, txnStatus: 'pending', BuySell:buySell});
 }
 
 cleintTransactionSchemaDef.query.byCustomerAndPortfolio = function (cif, portfolioId) {
-    return this.find({ cif: cif, portfolioId: portfolioId });
+    return this.find({ cif: cif, portfolioId: portfolioId , txnStatus: 'completed'});
 }
 
-cleintTransactionSchemaDef.query.customerInitialPositionByPortfolio = function (cif, portfolioId) {
-    return this.aggregate([
-        {$match: { cif: cif, portfolioId: portfolioId}},
-        { $group: { _id: null, amount: { $sum: "$amount" } } }
-    ])
-}
+
+
+
 
 cleintTransactionSchemaDef.query.byDate = function (date) {
-    return this.find({ txnDate:{$gte: Date(date), $lt:Date(date.setDate(date.getDate() + 1))} });
+    return this.find({ txnDate:{$gte: Date(date), $lt:Date(date.setDate(date.getDate() + 1))}, txnStatus: 'completed' });
 }
 
 

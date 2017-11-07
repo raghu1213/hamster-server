@@ -23,57 +23,118 @@ export default class EventProcessor {
         let portfolioBelow = parseInt(eventSetting.portfolioBelow)
         let instrumentAbove = parseInt(eventSetting.instrumentAbove)
         let instrumentBelow = parseInt(eventSetting.instrumentBelow)
-        let clientMob = '6594889470' //clientDetails.mobileNumber
-        let cif = clientDetails.cif;
-        let portfolioId = clientDetails.portfolioId
+        let clientMob =  clientDetails[0].mobileNumber
+        let cif = clientDetails[0].cif;
+        let portfolioId = clientDetails[0].portfolioId
+        let expectedReturn = clientDetails[0].expectedReturn;
 
         let netPortfolioPosition = this._netPortfolioPosition(initialPosition, clientTransactionData, stockEODData)
+        let netInstrumentPositions = this._netInstrumentPositions(clientTransactionData, instrumentAbove, instrumentBelow, stockEODData)
         let portfolioAlertMsg = ''
         let instrumentAlertMsg = ''
 
         if ((netPortfolioPosition > 0 && netPortfolioPosition >= portfolioAbove) ||
             (netPortfolioPosition < 0 && Math.abs(netPortfolioPosition) > portfolioBelow)) {
-            let buyInstruments = [{'ticker': 'AAPL', units: 100, 'AssetType': 'Stocks'}]
-            let sellInstruments = [{'ticker': 'ACN', units: 600}]
 
             let upDownMessage = 'Down'
             if (netPortfolioPosition > 0) {
                 upDownMessage = 'Up'
             }
 
-            portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Buy: ${buyInstruments[0].ticker} ${buyInstruments[0].units} Sell: ${sellInstruments[0].ticker} ${sellInstruments[0].units}. Please reply y/n`
+            let worstInstrument;
+            let bestInstrument;
+            for (let inst in netInstrumentPositions) {
+                if (worstInstrument === undefined) {
+                    worstInstrument = netInstrumentPositions[inst];
+                    continue
+                }
+                if (bestInstrument === undefined) {
+                    bestInstrument = netInstrumentPositions[inst];
+                    continue
+                }
+
+                if (inst.netPosition > 0 && bestInstrument.netPosition < inst.netPosition) {
+                    bestInstrument = inst;
+                }
+                if (inst.netPosition < 0 && Math.abs(inst.netPosition) > Math.abs(worstInstrument.netPosition)) {
+                    worstInstrument = inst;
+                }
+            }
 
 
+            //nervous // concerned // conservative
+            if(expectedReturn === 'aggressive') {
+                if(netPortfolioPosition < 0) {
+                    // Buy Worst
+                    let unitsToBuy = 0
+                    if(worstInstrument.diffPercentage <= .1){
+                        unitsToBuy = Math.floor(worstInstrument.units * worstInstrument.diffPercentage)
+                    }
+                    else{
+                        unitsToBuy = Math.floor(worstInstrument.units * .1)
+                    }
+                    if(unitsToBuy > 0) {
+                        this._executeTransaction(cif, portfolioId, clientMob, 'B', worstInstrument.eod, 'stock', worstInstrument.ticker, unitsToBuy)
+                        portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Buy: ${worstInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                    }
+                }
+            }
 
-            /*(nexmoResponse) => {
-            logger.log(`sent Message to ${clientMob}, Message : ${message}`);
-            logger.log(nexmoResponse);
+            if(expectedReturn === 'conservative') {
+                if(netPortfolioPosition < 0) {
+                    //sell worst
+                    let unitsToBuy = 0
+                    if(worstInstrument.diffPercentage <= .1){
+                        unitsToBuy = Math.floor(worstInstrument.units * worstInstrument.diffPercentage)
+                    }
+                    else{
+                        unitsToBuy = Math.floor(worstInstrument.units * .1)
+                    }
+                    if(unitsToBuy > 0) {
+                        this._executeTransaction(cif, portfolioId, clientMob, 'S', worstInstrument.eod, 'stock', worstInstrument.ticker, unitsToBuy)
+                        portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${worstInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                    }
 
-            this._executeTransaction(cif, portfolioId, true, stockEODData.adj_Close, buyInstruments[0])
-            this._executeTransaction(cif, portfolioId, false, stockEODData.adj_Close, sellInstruments[0])
-        });*/
+                }
+                else {
+                    // sell best
+                    let unitsToBuy = 0
+                    if(bestInstrument.diffPercentage <= .1){
+                        unitsToBuy = Math.floor(bestInstrument.units * bestInstrument.diffPercentage)
+                    }
+                    else{
+                        unitsToBuy = Math.floor(worstInstrument.units * .1)
+                    }
+                    if(unitsToBuy > 0) {
+                        this._executeTransaction(cif, portfolioId, clientMob, 'S', bestInstrument.eod, 'stock', bestInstrument.ticker, unitsToBuy)
+                        portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                    }
+                }
+
+            }
+
+            if(expectedReturn === 'moderate') {
+                if(netPortfolioPosition > 0) {
+                    //sell best
+                    let unitsToBuy = 0
+                    if(bestInstrument.diffPercentage <= .1){
+                        unitsToBuy = Math.floor(bestInstrument.units * bestInstrument.diffPercentage)
+                    }
+                    else{
+                        unitsToBuy = Math.floor(worstInstrument.units * .1)
+                    }
+                    if(unitsToBuy > 0) {
+                        this._executeTransaction(cif, portfolioId, clientMob, 'S', bestInstrument.eod, 'stock', bestInstrument.ticker, unitsToBuy)
+                        portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+
+                    }
+                }
+            }
+
         }
 
-        let netInstrumentPositions = this._netInstrumentPositions(clientTransactionData, instrumentAbove, instrumentBelow, stockEODData)
-        let worstInstrument;
-        let bestInstrument;
-        for (let inst in netInstrumentPositions) {
-            if (worstInstrument === undefined) {
-                worstInstrument = netInstrumentPositions[inst];
-                continue
-            }
-            if (bestInstrument === undefined) {
-                bestInstrument = netInstrumentPositions[inst];
-                continue
-            }
 
-            if (inst.netPosition > 0 && bestInstrument.netPosition < inst.netPosition) {
-                bestInstrument = inst;
-            }
-            if (inst.netPosition < 0 && Math.abs(inst.netPosition) > Math.abs(worstInstrument.netPosition)) {
-                worstInstrument = inst;
-            }
-        }
+
 
         if (netInstrumentPositions.length > 0) {
 
@@ -106,9 +167,6 @@ export default class EventProcessor {
 
             });
         }
-
-        //this._executeTransaction(cif, portfolioId, true, stockEODData.adj_Close, buyInstruments[0])
-        //this._executeTransaction(cif, portfolioId, false, stockEODData.adj_Close, sellInstruments[0])
     }
 
 
@@ -149,10 +207,11 @@ export default class EventProcessor {
             let ticker = clientTrans.ticker
             let eodPrice = this._getEODPriceForTicker(ticker, stockEODData)
             if(eodPrice > 0) {
-                let absDiff = parseFloat(eodPrice) - parseFloat(clientTrans.unitPrice)
-                let diff = Math.abs(parseFloat(eodPrice) - parseFloat(clientTrans.unitPrice))
-                if(diff > above || diff > below) {
-                    netPositionsToNotify.push({ticker: ticker, netPosition: absDiff})
+                let diff = parseFloat(eodPrice) - parseFloat(clientTrans.unitPrice)
+                let absDiff = Math.abs(parseFloat(eodPrice) - parseFloat(clientTrans.unitPrice))
+                let percentageDiff = (absDiff)/parseFloat(clientTrans.unitPrice)
+                if(absDiff > above || absDiff > below) {
+                    netPositionsToNotify.push({ticker: ticker, units: clientTrans.unitPrice, netPosition: diff, diffPercentage:percentageDiff, eod: eodPrice})
                 }
             }
 
@@ -160,6 +219,33 @@ export default class EventProcessor {
 
         return netPositionsToNotify;
     }
+
+    _executeTransaction(cif, portfolioId, mobileNumber, buySell, closePrice, assetType, ticker, units){
+
+
+        let transaction = new ClientTranasctionSchema({
+            cif: cif,
+            portfolioId: portfolioId,
+            AssetType: assetType,
+            ticker: ticker,
+            BuySell: buySell,
+            unitPrice: closePrice,
+            numberOfUnits: units,
+            amount: parseInt(units) * parseFloat(closePrice),
+            txnStatus:'pending',
+            mobileNumber: mobileNumber
+        })
+
+        transaction.save(async (err, data) => {
+            if (err) {
+                logger.log(`unable to execute client transaction cif: ${cif}, portfolio: ${portfolioId}`)
+                return
+            }
+            logger.log("New Transaction executed-->" + data)
+            logger.log(JSON.stringify(data))
+        })
+    }
+
 
 
 }
