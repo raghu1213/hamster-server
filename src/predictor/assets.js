@@ -62,7 +62,7 @@ export default class StockComposition {
 
         //let adjustedAmount = Math.round((amount - amountInvestedSoFar));
         let totalCash = totalCashAmount + roundingAmount;
-        let obj = { ticker: "FD", quantity: suggestedPortfolio.cash, totalAmount: totalCash, price: stockPrice, type: "CASH", name: "Money Market" }
+        let obj = { ticker: "FD", quantity: suggestedPortfolio.cash, totalAmount: totalCash, price: 0, type: "CASH", name: "Money Market" }
         this.Results.push(obj);
 
         let investedAmount = 0;
