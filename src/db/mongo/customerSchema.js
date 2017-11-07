@@ -6,6 +6,7 @@ autoIncrement.initialize(mongoose.connection)
 var customerSchema = new mongoose.Schema({
     cif: { type: Number, ref: 'cif' },
     userId: String,
+    name:String,
     portfolioId: String,
     age: Number,
     investmentKnowledge: String,
@@ -14,7 +15,8 @@ var customerSchema = new mongoose.Schema({
     investmentHorizon: String,
     reactionToFluctuations: String,
     totalRiskScore: { type: Number, required: true, default: 1 },
-    riskCategory: String
+    riskCategory: String,
+    initialInvestmentAmount:Number
 })
 
 customerSchema.plugin(autoIncrement.plugin, { model: 'customer', field: 'cif', startAt: 1000 })

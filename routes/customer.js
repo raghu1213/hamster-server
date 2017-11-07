@@ -24,23 +24,21 @@ router.get('/get/:loginId', async function (req, res) {
 
 router.post('/riskscore', async function (req, res) {
     let reqCustomer = req.body;
-    if(reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0 )
-    {
+    if (reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0) {
         res.json('Invalid Risk data')
     }
 
     var riskPredictor = new RiskPredictor();
     var riskScore = await riskPredictor.getRiskScore(reqCustomer)
     logger.log("Sending response--> " + riskScore);
-    res.json({totalRiskScore: riskScore});
+    res.json({ totalRiskScore: riskScore });
 })
 
 router.post('/insert', async function (req, res) {
     let reqCustomer = req.body;
     logger.log('Request-->' + JSON.stringify(reqCustomer))
 
-    if(reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0 )
-    {
+    if (reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0) {
         res.json('Invalid Risk data')
     }
 
@@ -52,6 +50,7 @@ router.post('/insert', async function (req, res) {
 
     let newCustomer = new CustomerSchema({
         userId: reqCustomer.userId,
+        name: reqCustomer.name,
         portfolioId: reqCustomer.portfolioId,
         age: reqCustomer.age,
         investmentKnowledge: reqCustomer.investmentKnowledge,
@@ -60,14 +59,15 @@ router.post('/insert', async function (req, res) {
         investmentHorizon: reqCustomer.investmentHorizon,
         reactionToFluctuations: reqCustomer.reactionToFluctuations,
         totalRiskScore: reqCustomer.totalRiskScore,
-        riskCategory: reqCustomer.riskCategory
+        riskCategory: reqCustomer.riskCategory,
+        initialInvestmentAmount: reqCustomer.initialInvestmentAmount
     })
     newCustomer.save(async (err, data) => {
         if (err) {
             return util.errorRespose(res, err);
         }
         logger.log("Risk created-->" + data)
-        let response = { customer: data};
+        let response = { customer: data };
         logger.log(JSON.stringify(response))
         res.send(response);
     })
@@ -87,6 +87,7 @@ router.post('/update', async function (req, res) {
         { "cif": reqCustomer.cif },//find this
         {
             userId: reqCustomer.userId,
+            name: reqCustomer.name,
             portfolioId: reqCustomer.portfolioId,
             age: reqCustomer.age,
             investmentKnowledge: reqCustomer.investmentKnowledge,
@@ -95,11 +96,12 @@ router.post('/update', async function (req, res) {
             investmentHorizon: reqCustomer.investmentHorizon,
             reactionToFluctuations: reqCustomer.reactionToFluctuations,
             totalRiskScore: reqCustomer.totalRiskScore,
-            riskCategory: reqCustomer.riskCategory
+            riskCategory: reqCustomer.riskCategory,
+            initialInvestmentAmount: reqCustomer.initialInvestmentAmount
         },
         { upsert: true, 'new': true },//fetch the updated
         async function (err, updatedObject) {
-            let response = { customer: updatedObject}
+            let response = { customer: updatedObject }
             logger.log("Update Respose-->" + JSON.stringify(response))
             res.json(response);
         })
