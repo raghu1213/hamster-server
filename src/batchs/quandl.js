@@ -1,5 +1,5 @@
 require('fetch-retry')
-const syncClient = require('sync-rest-client');
+
 
 
 
