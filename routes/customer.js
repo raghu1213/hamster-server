@@ -3,10 +3,13 @@ var router = express.Router();
 import Utils from './utils'
 import CustomerPredict from '../src/predictor/risk';
 import PortfolioWeight from '../src/predictor/portfolio';
+var ClientTranasctionSchema = require('../src/db/mongo/clientTransactionSchema');
 import CustomerSchema from '../src/db/mongo/customerSchema';
 import Logger from '../src/utils/logging'
 import RiskPredictor from '../src/predictor/risk'
 import * as Helper from '../src/utils/helper'
+import PortfolioBatch from '../src/predictor/assets';
+
 let util = new Utils();
 let logger = new Logger();
 
@@ -65,13 +68,42 @@ router.post('/insert', async function (req, res) {
     })
     newCustomer.save(async (err, data) => {
         if (err) {
-            return util.errorRespose(res, err);
+            res.json(util.errorRespose(res, err));
         }
         logger.log("Risk created-->" + data)
         let response = { customer: data };
         logger.log(JSON.stringify(response))
-        res.send(response);
+
     })
+    var batch = new PortfolioBatch();
+
+    let constituents = await batch.distribute(newCustomer.initialInvestmentAmount, newCustomer.totalRiskScore);
+    logger.log(`found details as : ${JSON.stringify(constituents)}`)
+    for(let transact in constituents) {
+        let data = constituents[transact];
+        let newTransaction = new ClientTranasctionSchema({
+            cif: newCustomer.cif,
+            portfolioId: newCustomer.portfolioId,
+            AssetType: data.type,
+            ticker: data.ticker,
+            BuySell: 'B',
+            unitPrice: data.price,
+            numberOfUnits: data.quantity,
+            amount: parseInt(data.quantity) * parseFloat(data.price)
+        })
+
+        newTransaction.save(async (err, data) => {
+            if (err) {
+                res.json(util.errorRespose(res, err));
+            }
+            logger.log("New Event created-->" + data)
+            let response = { eventInfo: data};
+            logger.log(JSON.stringify(response))
+
+        })
+    }
+
+    res.send('new user created');
 
 })
 
