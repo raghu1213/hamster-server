@@ -1,6 +1,7 @@
-var PwSchema = require('../db/mongo/pwSchema')
+//var PwSchema = require('../db/mongo/pwSchema')
 import Logger from '../utils/logging'
 import * as Helpers from '../utils/helper'
+import PortfolioWeight from '../batchs/pw'
 
 let logger = new Logger();
 
@@ -26,15 +27,24 @@ export default class Portfolio {
 
             let median = this.getMedian(riskCategory);
             let distance = 0
-            var portfolioWeight = await PwSchema.findOne({ 'profile': riskCategory }).exec();
+            //var portfolioWeight = await PwSchema.findOne({ 'profile': riskCategory }).exec();
+            var portfolioWeight;
+            for (let pw of PortfolioWeight) {
+                if (pw.profile === riskCategory)
+                {
+                    portfolioWeight = pw;
+                    break;
+                }    
+            }
+
+
             distance = riskScore - median
-            //stocks
+
             portfolioWeight.stockPercent = Math.round(portfolioWeight.stockPercent + (distance * 0.8));
             portfolioWeight.etfPercent = Math.round(portfolioWeight.etfPercent + (distance * 0.2));
-            //equities mutual funds
-            //Fixed income
+
             portfolioWeight.bondPercent = Math.round(portfolioWeight.bondPercent + (distance * -0.8))
-            portfolioWeight.cash = 100 - (portfolioWeight.stockPercent + portfolioWeight.etfPercent + portfolioWeight.bondPercent)//Math.round(portfolioWeight.cash + (distance * -0.2));
+            portfolioWeight.cash = 100 - (portfolioWeight.mfPercent + portfolioWeight.stockPercent + portfolioWeight.etfPercent + portfolioWeight.bondPercent)//Math.round(portfolioWeight.cash + (distance * -0.2));
             //fixed income mutual fund
         }
         catch (err) {

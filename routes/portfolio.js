@@ -23,10 +23,10 @@ router.get('/suggest/summary', async function (req, res, next) {
     for (let result of results) {
         let mungedResult = {
             profile: result.profile,
-            stock: result.stockPercent + result.etfPercent + result.mfEqPercent,
-            fixedIncome: result.bondPercent + result.mfFIPercent,
+            stock: result.stockPercent + result.etfPercent,
+            fixedIncome: result.bondPercent ,
             cash: result.cash,
-            others: result.mfMixedPercent
+            mutualFund: result.mfPercent
         }
         mungedResults.push(mungedResult)
     }

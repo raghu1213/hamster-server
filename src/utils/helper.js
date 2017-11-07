@@ -11,10 +11,12 @@ export function getRiskCategory(riskScore) {
 }
 
 export function formatPortfolio(suggestedPortfolio) {
-    let arr = { STOCK: suggestedPortfolio.stockPercent, ETF: suggestedPortfolio.etfPercent,
-         MFEQ: suggestedPortfolio.mfEqPercent, BOND: suggestedPortfolio.bondPercent,
-         MFFI: suggestedPortfolio.mfFIPercent, MFMIX: suggestedPortfolio.mfMixedPercent,
-         CASH: suggestedPortfolio.cash};
+    let arr = {
+        STOCK: suggestedPortfolio.stockPercent, ETF: suggestedPortfolio.etfPercent,
+        BOND: suggestedPortfolio.bondPercent,
+        MF: suggestedPortfolio.mfPercent,
+        CASH: suggestedPortfolio.cash
+    };
     return ({ profile: suggestedPortfolio.profile, distribution: arr });
 
 }

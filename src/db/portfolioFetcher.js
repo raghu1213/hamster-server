@@ -4,16 +4,7 @@ import MutualFundDetails from '../db/mongo/mutualFundDetailsSchema'
 
 export default class PorfolioFetcher {
     constructor() { }
-    /*
-     stockPercent: Number,
-    bondPercent: Number,
-    etfPercent: Number,
-    mfFIPercent: Number,
-    mfEqPercent: Number,
-    mfMixedPercent: Number,
-    cash: Number
-     */
-
+   
 
     async getPortfolioDrillDown(riskScrore) {
         let predictor = new PortfolioPredict();

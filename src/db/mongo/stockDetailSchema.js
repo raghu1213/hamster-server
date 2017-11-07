@@ -5,14 +5,13 @@ var autoIncrement = require('mongoose-auto-increment')
 autoIncrement.initialize(mongoose.connection)
 
 var stockDetailsSchema = new mongoose.Schema({
-    sr_No: { type: Number, ref: 'sr_No' },
+    srNo: { type: Number, ref: 'srNo' },
     ticker: String,
-    company: String,
+    name: String,
     sector: String,
     industry: String,
     country: String,
     marketCap: Number,
-    peRatio: Number,
     peRatio: Number,
     price: Number,
     change: Number,
@@ -39,9 +38,38 @@ var stockDetailsSchema = new mongoose.Schema({
     instOwn: Number,
     instTran: Number,
     floatShort: Number,
-    shortRatio: Number
+    shortRatio: Number,
+    perfWeek: Number,
+    perfMonth: Number,
+    perfQuart: Number,
+    perfHalf: Number,
+    perfYear: Number,
+    perfYTD: Number,
+    volatilityWeek: Number,
+    volatilityMonth: Number,
+    recom: Number,
+    beta: Number,
+    atr: Number,
+    sma20: Number,
+    sma50: Number,
+    sma200: Number,
+    rsi: Number,
+    loadDate: Date,
+    marketCapCategory: String,
+    peRatioRank: Number,
+    fwdPERatioRank: Number,
+    epsAndDividentRank: Number,
+    roaRank: Number,
+    roeRank: Number,
+    debtEqRank: Number,
+    marketCapBillionsRank: Number,
+    weightedFactorsRank: Number,
+    stockRankRank: Number,
+    betaRank: Number,
+    riskProfileBeta: String,
+    normalizedBeta: Number
 })
-stockDetailsSchema.plugin(autoIncrement.plugin, { model: 'sr_No', field: 'sr_No', startAt: 1 })
+stockDetailsSchema.plugin(autoIncrement.plugin, { model: 'srNo', field: 'srNo', startAt: 1 })
 
 stockDetailsSchema.query.byTickers = function (tickers) {
     return this.find({ 'ticker': { $in: tickers } })

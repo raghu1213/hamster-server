@@ -6,9 +6,7 @@ var pwSchema = new mongoose.Schema({
     stockPercent: Number,
     bondPercent: Number,
     etfPercent: Number,
-    mfFIPercent: Number,
-    mfEqPercent: Number,
-    mfMixedPercent: Number,
+    mfPercent: Number,
     cash: Number
    
 })
