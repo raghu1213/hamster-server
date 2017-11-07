@@ -1,6 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var EventsSchema = require('../src/db/mongo/eventsSchema');
+var ClientTransactionSchema = require('../src/db/mongo/clientTransactionSchema');
+var StockTimeSeries = require('../src/db/mongo/stockTimeSeries');
+import EventProcessor from '../src/processor/eventprocessor';
+import CustomerSchema from '../src/db/mongo/customerSchema';
+
 import Utils from './utils'
 import Logger from '../src/utils/logging'
 
@@ -74,6 +79,58 @@ router.post('/update', async function (req, res) {
             res.json(response);
         })
 })
+
+router.post('/confirmation', async function(req, res){
+    logger.log(`recieved callback from nexmo : ${req.body}`)
+    console.log(`recieved callback from nexmo : ${req.body}`)
+})
+
+router.post('/process', async function (req, res) {
+    let dateJson = req.body
+    console.log('process')
+    console.log(`${req.baseUrl} processing date: ${JSON.stringify(dateJson)}`)
+    let processingDateMinusOne = new Date(parseInt(dateJson.year), parseInt(dateJson.month), parseInt(dateJson.day) -1 )
+    let processingDate = new Date(parseInt(dateJson.year), parseInt(dateJson.month), parseInt(dateJson.day) )
+    let events = await EventsSchema.find().exec();
+    let eventProcesssor = new EventProcessor()
+    let jsonEvents = JSON.parse(JSON.stringify(events))
+    for (let event in jsonEvents) {
+        let eventDetail = jsonEvents[event];
+        let clientTransactions = await ClientTransactionSchema.find().byCustomerAndPortfolio(eventDetail.cif, eventDetail.portfolioId).exec()
+
+        let clientInitialPositionInfo = 0.0
+        let tickers = ''
+        for(let trans in clientTransactions) {
+            let data = clientTransactions[trans]
+            if(tickers.length === 0) {
+                tickers += data.ticker
+            }
+            else {
+                tickers += ',' + data.ticker
+            }
+            if(data.amount === undefined || data.amount === null || isNaN(data.amount)) {
+                continue
+            }
+
+            clientInitialPositionInfo += parseFloat(data.amount)
+        }
+        console.log('clientInitialPositionInfo : ' + clientInitialPositionInfo + 'Tickers + ' + tickers)
+        if(clientInitialPositionInfo === 0 || isNaN(clientInitialPositionInfo)) {
+            continue
+        }
+
+        let customerDetails = await CustomerSchema.find().byCustomerAndPortfolio(event.cif, event.portfolioId).exec()
+        console.log('customer found')
+        let stockDetailsTest = await StockTimeSeries.find().byTickers(tickers).exec()
+        let stockDetails = await StockTimeSeries.find().byDateRangeAndTickers('AAPL', processingDateMinusOne, processingDate).exec()
+        logger.log(`processing events for event ${event}`)
+        await eventProcesssor.processEvent(eventDetail, clientInitialPositionInfo, clientTransactions, customerDetails, stockDetails)
+    }
+
+    res.json('events processed');
+})
+
+
 
 
 module.exports = router;

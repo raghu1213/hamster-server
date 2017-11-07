@@ -11,7 +11,7 @@ let util = new Utils();
 let logger = new Logger();
 
 router.get('/all', async function (req, res) {
-    let result = await customerSchema.find().exec();
+    let result = await CustomerSchema.find().exec();
     res.json(result);
 })
 
@@ -60,7 +60,8 @@ router.post('/insert', async function (req, res) {
         investmentHorizon: reqCustomer.investmentHorizon,
         reactionToFluctuations: reqCustomer.reactionToFluctuations,
         totalRiskScore: reqCustomer.totalRiskScore,
-        riskCategory: reqCustomer.riskCategory
+        riskCategory: reqCustomer.riskCategory,
+        mobileNumber: reqCustomer.mobileNumber
     })
     newCustomer.save(async (err, data) => {
         if (err) {
@@ -95,7 +96,8 @@ router.post('/update', async function (req, res) {
             investmentHorizon: reqCustomer.investmentHorizon,
             reactionToFluctuations: reqCustomer.reactionToFluctuations,
             totalRiskScore: reqCustomer.totalRiskScore,
-            riskCategory: reqCustomer.riskCategory
+            riskCategory: reqCustomer.riskCategory,
+            mobileNumber: reqCustomer.mobileNumber
         },
         { upsert: true, 'new': true },//fetch the updated
         async function (err, updatedObject) {

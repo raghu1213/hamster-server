@@ -2,7 +2,7 @@ var mongoose = require('mongoose')
 
 var stockTimeSeriesSchema = new mongoose.Schema({
     ticker: String,
-    date: Date,
+    date: {type: Date, index:true},
     open: Number,
     high: Number,
     low: Number,
@@ -17,8 +17,21 @@ var stockTimeSeriesSchema = new mongoose.Schema({
     adj_Volume: Number
 })
 
+stockTimeSeriesSchema.index({ticker: 1, date: 1}, {unique: true});
+
 stockTimeSeriesSchema.query.byTickers = function (tickers) {
     return this.find({ 'ticker': { $in: tickers } })
+}
+
+stockTimeSeriesSchema.query.byDate = function (date) {
+    return this.find({ 'date': { $gte:date } })
+}
+stockTimeSeriesSchema.query.byDateRangeAndTickers = function (tickers, prevDate, date) {
+    return this.find({ 'ticker': { $in: tickers } , 'date': {$gte: prevDate, $lte: date} })
+}
+
+stockTimeSeriesSchema.query.byDateAndTickers = function (tickers, date) {
+    return this.find({ 'ticker': { $in: tickers } , 'date': { $gte: date } })
 }
 
 var stockTimeSeriesModel = mongoose.model('stockTimeSeries', stockTimeSeriesSchema, 'stockTimeSeries');

@@ -3,7 +3,7 @@ require('babel-polyfill')
 var mongoose = require('mongoose')
 import StockDetails from '../db/mongo/stockDetailSchema'
 import MutualFundDetails from '../db/mongo/mutualFundDetailsSchema'
-import PortfolioPredict from '../predictor/portfolio'
+import PortfolioPredict from './portfolio'
 const RISK_SCORE = 25;
 const LARGE = .5;
 const MID = .3;
