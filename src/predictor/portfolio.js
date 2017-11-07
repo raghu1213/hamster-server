@@ -8,7 +8,7 @@ export default class Portfolio {
     constructor() {
 
     }
-    
+
     getMedian(riskCategory) {
         if (riskCategory === 'conservative')
             return 7
@@ -29,15 +29,15 @@ export default class Portfolio {
             var portfolioWeight = await PwSchema.findOne({ 'profile': riskCategory }).exec();
             distance = riskScore - median
             //stocks
-            portfolioWeight.stockPercent = portfolioWeight.stockPercent + (distance * 0.8);
-            portfolioWeight.etfPercent = portfolioWeight.etfPercent + (distance * 0.2);
+            portfolioWeight.stockPercent = Math.round(portfolioWeight.stockPercent + (distance * 0.8));
+            portfolioWeight.etfPercent = Math.round(portfolioWeight.etfPercent + (distance * 0.2));
             //equities mutual funds
             //Fixed income
-            portfolioWeight.bondPercent = portfolioWeight.bondPercent + (distance * -0.8)
-            portfolioWeight.cash = portfolioWeight.cash + (distance * -0.2);
+            portfolioWeight.bondPercent = Math.round(portfolioWeight.bondPercent + (distance * -0.8))
+            portfolioWeight.cash = 100 - (portfolioWeight.stockPercent + portfolioWeight.etfPercent + portfolioWeight.bondPercent)//Math.round(portfolioWeight.cash + (distance * -0.2));
             //fixed income mutual fund
         }
-        catch (err){
+        catch (err) {
             logger.log(err.message);
             return {};
         }
