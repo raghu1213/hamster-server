@@ -18,7 +18,7 @@ import Logger from '../utils/logging'
 var logger = new Logger();
 export default class StockComposition {
     constructor() {
-
+        this.Results = [];
     }
     async _getStocks(riskCategory, marketCap) {
         let stocks = StockDetails.find({ riskProfileBeta: riskCategory, marketCapCategory: marketCap }).sort("-roe").exec();
@@ -34,6 +34,35 @@ export default class StockComposition {
         let mutualFunds = MutualFundDetails.find({ riskProfileBeta: riskCategory }).exec();
         return mutualFunds;
     }
+    
+
+    async buyAndDistribute(listOfStocks, totalAmountToInvest, cap)
+    {
+        let stockNumber = 0;
+        let amountInvestedSoFar = 0;
+        for (let i = 0; i < listOfStocks.length; i++) {
+            let stock = listOfStocks[i];
+            //let stockPrice = await StockTimeSeries.find({ ticker: stock.ticker }).sort('-date').limit(1).exec();
+            let amountToInvest = totalAmountToInvest * INVESTMENT_DIVERSIFICATION[stockNumber]
+            let stockPrice = Math.floor((Math.random() * 5000) + 1);
+            if (stockPrice > amountToInvest) {
+                continue;
+            }
+
+            let stockBought = Math.floor(amountToInvest / stockPrice);
+            let investedAmount = stockBought * stockPrice
+            amountInvestedSoFar += investedAmount
+            logger.log("Ticker:" + stock.ticker + ":stock price-->" + stockPrice + ":Amout allocated:" + investedAmount + ": Bought-->" + stockBought)
+            let obj = { ticker: stock.ticker, quantity: stockBought, totalAmount: investedAmount }
+            this.Results.push(obj);
+            stockNumber++
+            if (stockNumber >= 4) {
+                break;
+            }
+            
+        }
+        return amountInvestedSoFar;
+    }
 
     async  pickupStocks(investmentAmount, riskScore) {
         let results = [];
@@ -44,94 +73,25 @@ export default class StockComposition {
             let totalMidCapAmount = investmentAmount * MID;
             let totalSmallCapAmount = investmentAmount * SMALL
             logger.log("Large cap amount --> " + totalLargeCapAmount + "Mid cap amount --> " + totalMidCapAmount + "Small cap amount --> " + totalSmallCapAmount)
+           
             let largeCapStocks = await this._getStocks(riskCategory, "LARGE")
-            let midCapStocks = await this._getStocks(riskCategory, "MID")
-            let smallCapStocks = await this._getStocks(riskCategory, "SMALL")
-
-
-            let stockNumber = 0;
-            let amountInvestedSoFar = 0;
-            for (let i = 0; i < largeCapStocks.length; i++) {
-                let stock = largeCapStocks[i];
-                //let stockPrice = await StockTimeSeries.find({ ticker: stock.ticker }).sort('-date').limit(1).exec();
-                let amountToInvest = totalLargeCapAmount * INVESTMENT_DIVERSIFICATION[stockNumber]
-                let stockPrice = Math.floor((Math.random() * 5000) + 1);
-                if (stockPrice > amountToInvest) {
-                    continue;
-                }
-
-                let stockBought = Math.floor(amountToInvest / stockPrice);
-                let investedAmount = stockBought * stockPrice
-                amountInvestedSoFar += investedAmount
-                logger.log("Ticker:" + stock.ticker + ":stock price-->" + stockPrice + ":Amout allocated:" + investedAmount + ": Bought-->" + stockBought)
-                let obj = { ticker: stock.ticker, quantity: stockBought, totalAmount: investedAmount }
-                results.push(obj);
-                stockNumber++
-                if (stockNumber >= 4) {
-                    break;
-                }
-            }
-
-
-            stockNumber = 0;
-
-
+            let amountInvestedSoFar = await this.buyAndDistribute(largeCapStocks, totalLargeCapAmount);
             logger.log(`Large Cap : To be invested ${totalLargeCapAmount}; Invested ${amountInvestedSoFar}`)
             totalMidCapAmount = totalMidCapAmount + totalLargeCapAmount - amountInvestedSoFar
-            amountInvestedSoFar = 0
-            for (let i = 0; i < midCapStocks.length; i++) {
-                let stock = midCapStocks[i];
-                //let stockPrice = await StockTimeSeries.find({ ticker: stock.ticker }).sort('-date').limit(1).exec();
-                let amountToInvest = totalMidCapAmount * INVESTMENT_DIVERSIFICATION[stockNumber]
-                let stockPrice = Math.floor((Math.random() * 5000) + 1);
-                if (stockPrice > amountToInvest) {
-                    continue;
-                }
 
-                let stockBought = Math.floor(amountToInvest / stockPrice);
-                let investedAmount = stockBought * stockPrice
-                amountInvestedSoFar += investedAmount
-                logger.log("Ticker:" + stock.ticker + ":stock price-->" + stockPrice + ":Amout allocated:" + investedAmount + ": Bought-->" + stockBought)
-                let obj = { ticker: stock.ticker, quantity: stockBought, totalAmount: investedAmount }
-                results.push(obj);
-                stockNumber++
-                if (stockNumber >= 4) {
-                    break;
-                }
-            }
-
-            stockNumber = 0;
-
+            let midCapStocks = await this._getStocks(riskCategory, "MID")
+            await this.buyAndDistribute(midCapStocks, totalMidCapAmount);
             totalSmallCapAmount = totalSmallCapAmount + totalMidCapAmount - amountInvestedSoFar
             logger.log(`Mid Cap : To be invested ${totalMidCapAmount}; Invested ${amountInvestedSoFar}`)
 
-            amountInvestedSoFar = 0
-            for (let i = 0; i < smallCapStocks.length; i++) {
-                let stock = smallCapStocks[i];
-                //let stockPrice = await StockTimeSeries.find({ ticker: stock.ticker }).sort('-date').limit(1).exec();
-                let amountToInvest = totalSmallCapAmount * INVESTMENT_DIVERSIFICATION[stockNumber]
-                let stockPrice = Math.floor((Math.random() * 5000) + 1);
-                if (stockPrice > amountToInvest) {
-                    continue;
-                }
-
-                let stockBought = Math.floor(amountToInvest / stockPrice);
-                let investedAmount = stockBought * stockPrice
-                amountInvestedSoFar += investedAmount
-                logger.log("Ticker:" + stock.ticker + ":stock price-->" + stockPrice + ":Amout allocated:" + investedAmount + ": Bought-->" + stockBought)
-                let obj = { ticker: stock.ticker, quantity: stockBought, totalAmount: investedAmount }
-                results.push(obj);
-                stockNumber++
-                if (stockNumber >= 4) {
-                    break;
-                }
-            }
-
+            let smallCapStocks = await this._getStocks(riskCategory, "SMALL")
+            await this.buyAndDistribute(smallCapStocks, totalLargeCapAmount);
             logger.log(`Small Cap : To be invested ${totalSmallCapAmount}; Invested ${amountInvestedSoFar}`)
 
             console.log(`remaining amount to be adjusted in cash ${totalSmallCapAmount - amountInvestedSoFar}`)
 
-            return results;
+            return this.Results;
+            
         }
         catch (err) {
             console.log(err.message);
