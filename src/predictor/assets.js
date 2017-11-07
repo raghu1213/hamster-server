@@ -61,7 +61,8 @@ export default class StockComposition {
         logger.log("Remaining amount after rounding " + roundingAmount);
 
         //let adjustedAmount = Math.round((amount - amountInvestedSoFar));
-        let obj = { ticker: "FD", quantity: suggestedPortfolio.cash, totalAmount: totalCashAmount + roundingAmount, type: "CASH", name: "Money Market" }
+        let totalCash = totalCashAmount + roundingAmount;
+        let obj = { ticker: "FD", quantity: suggestedPortfolio.cash, totalAmount: totalCash, price: stockPrice, type: "CASH", name: "Money Market" }
         this.Results.push(obj);
 
         let investedAmount = 0;
@@ -201,7 +202,7 @@ export default class StockComposition {
 
             //logger.log("Remaining amount in this pass-->" + reamainingAmount)
             logger.log("Ticker:" + stock.ticker + ":stock price-->" + stockPrice + ":Amout allocated:" + investedInthisPass + ": Bought-->" + stockBought)
-            let obj = { ticker: stock.ticker, quantity: stockBought, totalAmount: investedInthisPass, type: type, name: stock.name }
+            let obj = { ticker: stock.ticker, quantity: stockBought, totalAmount: investedInthisPass, price: stockPrice, type: type, name: stock.name }
             this.Results.push(obj);
             if (reamainingAmount < MIN_AMOUT_FOR_INVESTMENT) {
                 break;
