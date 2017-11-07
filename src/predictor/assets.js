@@ -3,6 +3,8 @@ var mongoose = require('mongoose')
 import StockDetails from '../db/mongo/stockDetailSchema'
 import MutualFundDetails from '../db/mongo/mutualFundDetailsSchema'
 import BondDetails from '../db/mongo/bondDetailsSchema'
+import EtfDetails from '../db/mongo/etfSchema'
+
 import CustomerDetails from '../db/mongo/customerSchema'
 import PortfolioPredict from './portfolio'
 const RISK_SCORE = 25;
@@ -24,26 +26,52 @@ export default class StockComposition {
         this.Results = [];
     }
 
+    async distribute(amount, riskScore, cif) {
 
-    async picupBond(investmentAmout, riskScore, cif) {
+        let portfolioPredict = new PortfolioPredict()
+        let suggestedPortfolio = await portfolioPredict.getRiskAdjustedPortfolio(riskScore);
 
+        logger.log("Suggested Portfolio -->" + JSON.stringify(suggestedPortfolio))
+
+        let totalStockAmount = amount * (suggestedPortfolio.stockPercent / 100);
+        let totalMFPercent = suggestedPortfolio.mfFIPercent + suggestedPortfolio.mfEqPercent + suggestedPortfolio.mfMixedPercent;
+        let totalMfAmount = amount * (totalMFPercent / 100);
+        let totalBondAmount = amount * (suggestedPortfolio.bondPercent / 100);
+        let totalEtfAmount = amount * (suggestedPortfolio.etfPercent / 100);
+        let totalCashAmount = amount * (suggestedPortfolio.cash / 100);
+        logger.log(`Stock:${totalStockAmount} ETF:${totalEtfAmount} MF amount:${totalMfAmount} Bonds:${totalBondAmount} Cash:${totalCashAmount}`);
+        await this.pickupStocks(totalStockAmount, riskScore)
+        await this.pickupMutualFunds(totalMfAmount, riskScore)
+        await this.pickupBond(totalBondAmount, riskScore, cif)
+        await this.pickupEtf(totalEtfAmount, riskScore, cif)
+        let obj = { ticker: "FD", quantity: suggestedPortfolio.cash, totalAmount: totalCashAmount, type: "Term Deposit", name: "CASH" }
+        this.Results.push(obj);
+        return this.Results;
+    }
+    async pickupEtf(investmentAmout, riskScore, cif) {
+        let etfs = await EtfDetails.find().sort({ "ytd3": -1 }).exec();
+        let amountInvestedSoFar = await this.buyAndDistribute(etfs, investmentAmout, 'ETF');
+        logger.log(`ETF To be invested ${investmentAmout}; Invested ${amountInvestedSoFar}`)
+    }
+
+    async pickupBond(investmentAmount, riskScore, cif) {
         let bonds;
         if (cif != undefined && cif != null) {
             let customer = await CustomerDetails.findOne({ cif: cif }).exec();
             let horizon = customer.investmentHorizon.split("-");
+
             let min = horizon[0]
             let max = horizon[1]
-            bonds = BondDetails.find({ 'maturityYearsFromToday': { $gte: min, $lte: max } }).sort('-ytm');
 
+            bonds = await BondDetails.find({ 'maturityYearsFromToday': { $gte: min, $lte: max } }).sort({ "ytm": -1 }).exec();
         }
-        else {
-            bonds = BondDetails.find().sort('-ytm');
+        if (bonds === undefined) {
+            bonds = await BondDetails.find().sort({ 'ytm': -1 }).exec();
         }
-        let amountInvestedSoFar = await this.buyAndDistribute(bonds, investmentAmout, 'BOND');
-        logger.log(`BOND To be invested ${investmentAmout}; Invested ${amountInvestedSoFar}`)
 
+        let amountInvestedSoFar = await this.buyAndDistribute(bonds, investmentAmount, 'BOND');
+        logger.log(`Bond amout To be invested ${investmentAmount}; Invested ${amountInvestedSoFar}`)
     }
-
 
     async pickupMutualFunds(investmentAmount, riskScore) {
         let riskCategory = Helpers.getRiskCategory(riskScore)
@@ -80,33 +108,13 @@ export default class StockComposition {
         console.log(`remaining amount to be adjusted in cash ${totalSmallCapAmount - amountInvestedSoFar}`)
     }
 
-
-
-    async distribute(amount, riskScore) {
-
-        let portfolioPredict = new PortfolioPredict()
-        let suggestedPortfolio = await portfolioPredict.getRiskAdjustedPortfolio(riskScore);
-        let stockAmount = amount * (suggestedPortfolio.stockPercent / 100);
-        let totalMFPercent = suggestedPortfolio.mfFIPercent + suggestedPortfolio.mfEqPercent + suggestedPortfolio.mfMixedPercent;
-        let mfAmount = amount * (totalMFPercent / 100);
-        let totalBondAmount = amount * (suggestedPortfolio.bondPercent / 100);
-        let totalEtfAmount = amount * (suggestedPortfolio.etfPercent / 100);
-        let totalCashAmount = amount * (suggestedPortfolio.cash / 100);
-        logger.log(`Stock:${stockAmount} ETF:${totalEtfAmount} MF amount:${mfAmount} Bonds:${totalBondAmount} Cash:${totalCashAmount}`);
-        await this.pickupStocks(stockAmount, riskScore)
-        await this.pickupMutualFunds(mfAmount, riskScore)
-
-        let obj = { ticker: "CASH", quantity: suggestedPortfolio.cash, totalAmount: totalCashAmount, type: "CASH", name: "CASH" }
-        this.Results.push(obj);
-        return this.Results;
-    }
     async _getStocks(riskCategory, marketCap) {
-        let stocks = StockDetails.find({ riskProfileBeta: riskCategory, marketCapCategory: marketCap }).sort("-roe").exec();
+        let stocks = StockDetails.find({ riskProfileBeta: riskCategory, marketCapCategory: marketCap }).sort({ "roe": -1 }).exec();
         return stocks;
     }
 
     async  _getMutualFunds(riskCategory) {
-        let mutualFunds = MutualFundDetails.find({ riskProfile: riskCategory }).sort('-ytd5Ypercent').exec();
+        let mutualFunds = MutualFundDetails.find({ riskProfile: riskCategory }).sort({ "ytd5Ypercent": -1 }).exec();
         return mutualFunds;
     }
 
@@ -120,16 +128,20 @@ export default class StockComposition {
 
             let stockPrice = 0;
             if (type === 'STOCK') {
-                let searchResult = await StockTimeSeries.find({ ticker: stock.ticker }).sort('-date').limit(1).exec();
+                let searchResult = await StockTimeSeries.find({ ticker: stock.ticker }).sort({ "date": -1 }).limit(1).exec();
                 //logger.log(JSON.stringify(stockEodData))
                 if (searchResult.length === 1) {
                     stockPrice = searchResult[0].close;
                     logger.log('Stock price for ' + stock.ticker + ':' + stockPrice)
                 }
             }
-            else if (type === 'MF') {
+            else if (type === 'MF' || type === "ETF") {
                 stockPrice = stock.nav;
             }
+            else if (type === 'BOND') {
+                stockPrice = stock.amount;
+            }
+
             if (stockPrice === 0) continue;
             let amountToInvest = totalAmountToInvest * INVESTMENT_DIVERSIFICATION[stockNumber]
             //let stockPrice = Math.floor((Math.random() * 5000) + 1);

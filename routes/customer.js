@@ -24,7 +24,7 @@ router.get('/get/:loginId', async function (req, res) {
 
 router.post('/riskscore', async function (req, res) {
     let reqCustomer = req.body;
-    if (reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0) {
+    if (reqCustomer === undefined || reqCustomer === null || reqCustomer.userId === '') {
         res.json('Invalid Risk data')
     }
 
@@ -38,7 +38,7 @@ router.post('/insert', async function (req, res) {
     let reqCustomer = req.body;
     logger.log('Request-->' + JSON.stringify(reqCustomer))
 
-    if (reqCustomer === undefined || reqCustomer === null || reqCustomer.userId.length === 0) {
+    if (reqCustomer === undefined || reqCustomer === null || reqCustomer.userId === '') {
         res.json('Invalid Risk data')
     }
 
