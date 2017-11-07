@@ -82,11 +82,45 @@ router.post('/update', async function (req, res) {
 
 router.post('/confirmation', async function(req, res){
     logger.log(`recieved callback from nexmo : ${JSON.stringify(req.body)}`)
+    if(req.body === undefined ){
+        logger.log(`invalid request recieved`)
+    }
     let status = req.body.text.toLowerCase()
     let clientMobile = req.body.msisdn
-    if(status === 'yes') {
-        executeTransaction('1034', '1', 'B', '174', 'stock', 'AAPL', 100)
-        executeTransaction('1034', '1', 'S', '100', 'stock', 'ACN', 600)
+
+    if(status === 'no') {
+        res.send('recieved')
+        return
+    }
+
+    let txnDetails = status.split(' ')
+    for(let i = 0;i<= txnDetails.length / 3; i++) {
+        let buySell = txnDetails[0].toUpperCase().charAt(0)
+        let ticker = txnDetails[1].toUpperCase()
+        let units = parseInt(txnDetails[2])
+        logger.log(`executing transaction BuySell: ${buySell}, ticker: ${ticker}, units: ${units}`)
+        let clientTransactions = await ClientTransactionSchema.find().pendingTransactionByMobileNumberTickerAndBuySell(clientMobile, ticker, buySell).exec()
+        logger.log(`number of matching transactions found for customer : ${clientTransactions.length}`)
+        let matchingTrans = clientTransactions[0]
+        await ClientTransactionSchema.findOneAndUpdate(
+            {"cif": matchingTrans.cif, portfolioId: matchingTrans.portfolioId},//find this
+            {
+                cif: matchingTrans.cif,
+                portfolioId: matchingTrans.portfolioId,
+                AssetType: matchingTrans.AssetType,
+                ticker: matchingTrans.ticker,
+                BuySell: matchingTrans.BuySell,
+                unitPrice: matchingTrans.unitPrice,
+                numberOfUnits: units,
+                txnStatus:'completed',
+                amount: parseInt(units) * parseFloat(matchingTrans.unitPrice)
+            },
+            {upsert: true, 'new': true},//fetch the updated
+            async function (err, updatedObject) {
+                let response = {customer: updatedObject}
+                logger.log("Update Respose-->" + JSON.stringify(response))
+
+            })
     }
     res.send('recieved')
 })
@@ -100,6 +134,7 @@ router.post('/process', async function (req, res) {
     let events = await EventsSchema.find().exec();
     let eventProcesssor = new EventProcessor()
     let jsonEvents = JSON.parse(JSON.stringify(events))
+    let stockDetails = await StockTimeSeries.find().byDateRange(processingDateMinusOne, processingDate).exec()
     for (let event in jsonEvents) {
         let eventDetail = jsonEvents[event];
         let clientTransactions = await ClientTransactionSchema.find().byCustomerAndPortfolio(eventDetail.cif, eventDetail.portfolioId).exec()
@@ -125,10 +160,52 @@ router.post('/process', async function (req, res) {
             continue
         }
 
-        let customerDetails = await CustomerSchema.find().byCustomerAndPortfolio(event.cif, event.portfolioId).exec()
+        let customerDetails = await CustomerSchema.find().byCustomerAndPortfolio(eventDetail.cif, eventDetail.portfolioId).exec()
         console.log('customer found')
-        let stockDetailsTest = await StockTimeSeries.find().byTickers(tickers).exec()
-        let stockDetails = await StockTimeSeries.find().byDateRangeAndTickers('AAPL', processingDateMinusOne, processingDate).exec()
+        logger.log(`processing events for event ${event}`)
+        await eventProcesssor.processEvent(eventDetail, clientInitialPositionInfo, clientTransactions, customerDetails, stockDetails)
+    }
+
+    res.json('events processed');
+})
+
+router.post('/process/:cif/:portfolioid', async function (req, res) {
+    let dateJson = req.body
+    console.log('process')
+    console.log(`${req.baseUrl} processing date: ${JSON.stringify(dateJson)}`)
+    let processingDateMinusOne = new Date(parseInt(dateJson.year), parseInt(dateJson.month), parseInt(dateJson.day) -1 )
+    let processingDate = new Date(parseInt(dateJson.year), parseInt(dateJson.month), parseInt(dateJson.day) )
+    let events = await EventsSchema.find().byCustomerDetails(req.params.cif, req.params.portfolioid) .exec();
+    let eventProcesssor = new EventProcessor()
+    let jsonEvents = JSON.parse(JSON.stringify(events))
+    let stockDetails = await StockTimeSeries.find().byDateRange(processingDateMinusOne, processingDate).exec()
+    for (let event in jsonEvents) {
+        let eventDetail = jsonEvents[event];
+        let clientTransactions = await ClientTransactionSchema.find().byCustomerAndPortfolio(eventDetail.cif, eventDetail.portfolioId).exec()
+
+        let clientInitialPositionInfo = 0.0
+        let tickers = ''
+        for(let trans in clientTransactions) {
+            let data = clientTransactions[trans]
+            if(tickers.length === 0) {
+                tickers += data.ticker
+            }
+            else {
+                tickers += ',' + data.ticker
+            }
+            if(data.amount === undefined || data.amount === null || isNaN(data.amount)) {
+                continue
+            }
+
+            clientInitialPositionInfo += parseFloat(data.amount)
+        }
+        console.log('clientInitialPositionInfo : ' + clientInitialPositionInfo + 'Tickers + ' + tickers)
+        if(clientInitialPositionInfo === 0 || isNaN(clientInitialPositionInfo)) {
+            continue
+        }
+
+        let customerDetails = await CustomerSchema.find().byCustomerAndPortfolio(eventDetail.cif, eventDetail.portfolioId).exec()
+        console.log('customer found')
         logger.log(`processing events for event ${event}`)
         await eventProcesssor.processEvent(eventDetail, clientInitialPositionInfo, clientTransactions, customerDetails, stockDetails)
     }
@@ -137,32 +214,7 @@ router.post('/process', async function (req, res) {
 })
 
 
- function executeTransaction(cif, portfolioId, isBuy, closePrice, assetType, ticker, units){
-    let buySell = 'S'
-    if(isBuy) {
-        buySell = 'B'
-    }
 
-    let transaction = new ClientTransactionSchema({
-        cif: cif,
-        portfolioId: portfolioId,
-        AssetType: assetType,
-        ticker: ticker,
-        BuySell: buySell,
-        unitPrice: closePrice,
-        numberOfUnits: units,
-        amount: parseInt(units) * parseFloat(closePrice)
-    })
-
-    transaction.save(async (err, data) => {
-        if (err) {
-            logger.log(`unable to execute client transaction cif: ${cif}, portfolio: ${portfolioId}`)
-            return
-        }
-        logger.log("New Transaction executed-->" + data)
-        logger.log(JSON.stringify(data))
-    })
-}
 
 
 

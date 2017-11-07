@@ -6,6 +6,7 @@ var express = require('express');
 var router = express.Router();
 var PortfolioWeightSchema = require('../src/db/mongo/pwSchema');
 import PortfolioBatch from '../src/predictor/assets';
+import CustomerSchema from '../src/db/mongo/customerSchema';
 
 var logger = new Logger()
 
@@ -42,6 +43,32 @@ router.get('/suggest/:riskscore', async function (req, res, next) {
 
     logger.log("Update Respose-->" + JSON.stringify(suggestedPortfolio))
     res.json(suggestedPortfolio);
+})
+router.get('/compose/:riskscore/:amount', async function (req, res, next) {
+    var batch = new PortfolioBatch();
+    let result = await batch.distribute(req.params.amount, req.params.riskscore);
+    return res.send(JSON.stringify(result));
+})
+
+router.get('/position/:cif/:portfolioid', async function (req, res, next) {
+
+    logger.log(`Requesting portfolio position cif: ${req.params.cif}, portfolioId: ${req.params.portfolioid}`)
+    let cif = req.params.cif
+    let portfolioId = req.params.portfolioid
+    let porfolioPredict = new PortfolioPredict();
+    let date = new Date()
+    let prevDate = new Date(date.getFullYear(), date.getMonth(), date.getDay() - 1)
+    let portfolioPostion = await porfolioPredict.getPortfolioPositionAsOfToday(cif, portfolioId, prevDate, date)
+    let reaslizedGain = await porfolioPredict.getRealizedGain(cif, portfolioId)
+    let customer = CustomerSchema.findOne({cif:cif, portfolioId: portfolioId})
+    let initialPosition = 0
+    if(customer != undefined && customer != null ) {
+        initialPosition = customer.initialInvestmentAmount
+    }
+
+    let responseJson = {todayPosition: portfolioPostion, realizedGain: reaslizedGain, initialPosition: initialPosition}
+    logger.log(" Respose-->" + JSON.stringify(responseJson))
+    res.json(responseJson);
 })
 router.get('/compose/:riskscore/:amount', async function (req, res, next) {
     var batch = new PortfolioBatch();
