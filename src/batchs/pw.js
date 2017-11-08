@@ -1,4 +1,4 @@
-let portfolioWeight =[]
+let portfolioWeight = []
 
 portfolioWeight.push({
     profile: "conservative",
@@ -22,7 +22,7 @@ portfolioWeight.push({
 // console.log("balanced")
 
 portfolioWeight.push({
-    profile: "highGrowth",
+    profile: "aggressive",
     stockPercent: 45,
     bondPercent: 15,
     etfPercent: 25,

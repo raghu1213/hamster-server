@@ -6,7 +6,7 @@ export function getRiskCategory(riskScore) {
         return "balanced"
     }
     else {
-        return "highGrowth"
+        return "aggressive"
     }
 }
 
