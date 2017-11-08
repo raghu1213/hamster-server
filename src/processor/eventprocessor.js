@@ -33,6 +33,8 @@ export default class EventProcessor {
         let portfolioAlertMsg = ''
         let instrumentAlertMsg = ''
 
+        logger.log(`net portfolio position : ${netPortfolioPosition}`)
+
         if ((netPortfolioPosition > 0 && netPortfolioPosition >= portfolioAbove) ||
             (netPortfolioPosition < 0 && Math.abs(netPortfolioPosition) > portfolioBelow)) {
 
@@ -76,6 +78,7 @@ export default class EventProcessor {
                     if(unitsToBuy > 0) {
                         this._executeTransaction(cif, portfolioId, clientMob, 'B', worstInstrument.eod, 'stock', worstInstrument.ticker, unitsToBuy)
                         portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Buy: ${worstInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                        logger.log(`sending sms : ${portfolioAlertMsg}`)
                     }
                 }
             }
@@ -93,6 +96,7 @@ export default class EventProcessor {
                     if(unitsToBuy > 0) {
                         this._executeTransaction(cif, portfolioId, clientMob, 'S', worstInstrument.eod, 'stock', worstInstrument.ticker, unitsToBuy)
                         portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${worstInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                        logger.log(`sending sms : ${portfolioAlertMsg}`)
                     }
 
                 }
@@ -108,6 +112,7 @@ export default class EventProcessor {
                     if(unitsToBuy > 0) {
                         this._executeTransaction(cif, portfolioId, clientMob, 'S', bestInstrument.eod, 'stock', bestInstrument.ticker, unitsToBuy)
                         portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                        logger.log(`sending sms : ${portfolioAlertMsg}`)
                     }
                 }
 
@@ -126,7 +131,7 @@ export default class EventProcessor {
                     if(unitsToBuy > 0) {
                         this._executeTransaction(cif, portfolioId, clientMob, 'S', bestInstrument.eod, 'stock', bestInstrument.ticker, unitsToBuy)
                         portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply y/n`
-
+                        logger.log(`sending sms : ${portfolioAlertMsg}`)
                     }
                 }
             }
