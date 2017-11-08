@@ -88,7 +88,7 @@ router.post('/insert', async function (req, res) {
                 BuySell: 'B',
                 unitPrice: data.price,
                 numberOfUnits: data.quantity,
-                txtStatus:"completed",
+                txnStatus: "completed",
                 amount: parseInt(data.quantity) * parseFloat(data.price)
             })
 
