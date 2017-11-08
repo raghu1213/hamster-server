@@ -43,10 +43,10 @@ export default class Risk {
                 logger.log("investmentHorizon-->" + horizonScore);
                 score = score + horizonScore;
             }
-            else if (obj.question === 'reactionToFluctuations') {
+            else if (obj.question === 'reactionToFluctuation') {
                 let fluctuationOption = obj.options;
-                let fluctuationScore = this._getScoreFromDirectMatch(customer.reactionToFluctuations, fluctuationOption)
-                logger.log("reactionToFluctuations-->" + fluctuationScore);
+                let fluctuationScore = this._getScoreFromDirectMatch(customer.reactionToFluctuation, fluctuationOption)
+                logger.log("reactionToFluctuation-->" + fluctuationScore);
                 score = score + fluctuationScore
             }
         }
