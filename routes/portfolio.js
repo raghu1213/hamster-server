@@ -60,7 +60,7 @@ router.get('/position/:cif/:portfolioid', async function (req, res, next) {
     let prevDate = new Date(date.getFullYear(), date.getMonth(), date.getDay() - 1)
     let portfolioPostion = await porfolioPredict.getPortfolioPositionAsOfToday(cif, portfolioId, prevDate, date)
     let reaslizedGain = await porfolioPredict.getRealizedGain(cif, portfolioId)
-    let customer = CustomerSchema.findOne({cif:cif, portfolioId: portfolioId})
+    let customer = await CustomerSchema.findOne({cif:cif, portfolioId: portfolioId}).exec()
     let initialPosition = 0
     if(customer != undefined && customer != null ) {
         initialPosition = customer.initialInvestmentAmount

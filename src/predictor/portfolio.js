@@ -35,17 +35,17 @@ export default class Portfolio {
                 units = -units
             }
             if (dict[data.ticker] === undefined || dict[data.ticker] === null) {
-                dict[data.ticker] = units
+                dict[data.ticker] = {units: units, price: data.unitPrice}
             }
             else {
-                dict[data.ticker] += units
+                dict[data.ticker] = {units: dict[data.ticker] + units, price: data.unitPrice}
             }
         }
 
         let currentPosition = 0
         for (let key in dict) {
-            let eodPrice = this._getEODPriceForTicker(key, stockDetails)
-            currentPosition += parseInt(dict[key]) * parseFloat(eodPrice)
+            let eodPrice = this._getEODPriceForTicker(dict[key].price, key, stockDetails)
+            currentPosition += parseInt(dict[key].units) * parseFloat(eodPrice)
         }
         return currentPosition
     }
@@ -105,12 +105,12 @@ export default class Portfolio {
         return portfolioWeight;
     }
 
-    _getEODPriceForTicker(ticker, stockEODData) {
+    _getEODPriceForTicker(initialPrice, ticker, stockEODData) {
         for (let stockIndex in stockEODData) {
             if (stockEODData[stockIndex].ticker.toLowerCase() === ticker.toLowerCase()) {
                 return parseFloat(stockEODData[stockIndex].close)
             }
         }
-        return -1
+        return initialPrice
     }
 }

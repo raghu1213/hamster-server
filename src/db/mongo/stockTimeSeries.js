@@ -28,7 +28,7 @@ stockTimeSeriesSchema.query.byDate = function (date) {
 }
 
 stockTimeSeriesSchema.query.byDateRange = function (prevDate, date) {
-    return this.find({ 'date': {$gte: prevDate, $lte: date}})
+    return this.find({ 'date': {$gt: prevDate, $lte: date}})
 }
 
 stockTimeSeriesSchema.query.byDateRangeAndTickers = function (tickers, prevDate, date) {
