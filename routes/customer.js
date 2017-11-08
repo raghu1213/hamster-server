@@ -66,44 +66,51 @@ router.post('/insert', async function (req, res) {
         initialInvestmentAmount: reqCustomer.initialInvestmentAmount,
         mobileNumber: reqCustomer.mobileNumber
     })
-    newCustomer.save(async (err, data) => {
+    newCustomer.save(async (err, updatedData) => {
         if (err) {
             res.json(util.errorRespose(res, err));
         }
-        logger.log("Risk created-->" + data)
-        let response = { customer: data };
-        logger.log(JSON.stringify(response))
+        //logger.log("Risk created-->" + data)
+        let response = { customer: updatedData };
+
+        //////
+        var batch = new PortfolioBatch();
+
+        let constituents = await batch.distribute(updatedData.initialInvestmentAmount, updatedData.totalRiskScore);
+        logger.log(`found details as : ${JSON.stringify(constituents)}`)
+        for (let transact in constituents) {
+            let data = constituents[transact];
+            let newTransaction = new ClientTranasctionSchema({
+                cif: updatedData.cif,
+                portfolioId: updatedData.portfolioId,
+                AssetType: data.type,
+                ticker: data.ticker,
+                BuySell: 'B',
+                unitPrice: data.price,
+                numberOfUnits: data.quantity,
+                amount: parseInt(data.quantity) * parseFloat(data.price)
+            })
+
+            newTransaction.save(async (err, data) => {
+                if (err) {
+                    res.json(util.errorRespose(res, err));
+                }
+                logger.log("New Event created-->" + data)
+                let response = { eventInfo: data };
+                logger.log(JSON.stringify(response))
+
+            })
+        }
+        //////
+
+
+        logger.log(JSON.stringify(updatedData))
+        res.json(updatedData)
 
     })
-    var batch = new PortfolioBatch();
 
-    let constituents = await batch.distribute(newCustomer.initialInvestmentAmount, newCustomer.totalRiskScore);
-    logger.log(`found details as : ${JSON.stringify(constituents)}`)
-    for(let transact in constituents) {
-        let data = constituents[transact];
-        let newTransaction = new ClientTranasctionSchema({
-            cif: newCustomer.cif,
-            portfolioId: newCustomer.portfolioId,
-            AssetType: data.type,
-            ticker: data.ticker,
-            BuySell: 'B',
-            unitPrice: data.price,
-            numberOfUnits: data.quantity,
-            amount: parseInt(data.quantity) * parseFloat(data.price)
-        })
 
-        newTransaction.save(async (err, data) => {
-            if (err) {
-                res.json(util.errorRespose(res, err));
-            }
-            logger.log("New Event created-->" + data)
-            let response = { eventInfo: data};
-            logger.log(JSON.stringify(response))
-
-        })
-    }
-
-    res.send('new user created');
+    // res.send('new user created');
 
 })
 
