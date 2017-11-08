@@ -136,12 +136,12 @@ export default class StockComposition {
     }
 
     async _getStocks(riskCategory, marketCap) {
-        let stocks = StockDetails.find({ riskProfileBeta: riskCategory }).sort({ "stockRankRank": 1 }).exec();
+        let stocks = await StockDetails.find({ riskProfileBeta: riskCategory }).sort({ "stockRankRank": 1 }).exec();
         return stocks;
     }
 
     async  _getMutualFunds(riskCategory) {
-        let mutualFunds = MutualFundDetails.find({ riskProfile: riskCategory }).sort({ "ytd5Ypercent": -1 }).exec();
+        let mutualFunds = await MutualFundDetails.find({ riskProfile: riskCategory }).sort({ "ytd5Ypercent": -1 }).exec();
         return mutualFunds;
     }
 
