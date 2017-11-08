@@ -46,7 +46,7 @@ Questionare.push({
 })
 
 Questionare.push({
-    question: "reactionToFluctuations",
+    question: "reactionToFluctuation",
     options: [
         { option: "nervous", weight: 1 },
         { option: "concerned", weight: 5 },
