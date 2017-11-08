@@ -66,7 +66,7 @@ export default class EventProcessor {
 
             //nervous // concerned // conservative
             if(expectedReturn === 'aggressive') {
-                if(netPortfolioPosition < 0) {
+                if(netPortfolioPosition < 0 && worstInstrument != undefined) {
                     // Buy Worst
                     let unitsToBuy = 0
                     if(worstInstrument.diffPercentage <= .1){
@@ -84,7 +84,7 @@ export default class EventProcessor {
             }
 
             if(expectedReturn === 'conservative') {
-                if(netPortfolioPosition < 0) {
+                if(netPortfolioPosition < 0 && worstInstrument != null) {
                     //sell worst
                     let unitsToBuy = 0
                     if(worstInstrument.diffPercentage <= .1){
@@ -101,18 +101,20 @@ export default class EventProcessor {
 
                 }
                 else {
-                    // sell best
-                    let unitsToBuy = 0
-                    if(bestInstrument.diffPercentage <= .1){
-                        unitsToBuy = Math.floor(bestInstrument.units * bestInstrument.diffPercentage)
-                    }
-                    else{
-                        unitsToBuy = Math.floor(worstInstrument.units * .1)
-                    }
-                    if(unitsToBuy > 0) {
-                        this._executeTransaction(cif, portfolioId, clientMob, 'S', bestInstrument.eod, 'stock', bestInstrument.ticker, unitsToBuy)
-                        portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply y/n`
-                        logger.log(`sending sms : ${portfolioAlertMsg}`)
+                    if(bestInstrument != null) {
+                        // sell best
+                        let unitsToBuy = 0
+                        if (bestInstrument.diffPercentage <= .1) {
+                            unitsToBuy = Math.floor(bestInstrument.units * bestInstrument.diffPercentage)
+                        }
+                        else {
+                            unitsToBuy = Math.floor(worstInstrument.units * .1)
+                        }
+                        if (unitsToBuy > 0) {
+                            this._executeTransaction(cif, portfolioId, clientMob, 'S', bestInstrument.eod, 'stock', bestInstrument.ticker, unitsToBuy)
+                            portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                            logger.log(`sending sms : ${portfolioAlertMsg}`)
+                        }
                     }
                 }
 
@@ -181,27 +183,26 @@ export default class EventProcessor {
         for(let clientTransact in clientTransactionData) {
             let clientTrans = clientTransactionData[clientTransact]
             let ticker = clientTrans.ticker
-            let eodPrice = this._getEODPriceForTicker(ticker, stockEODData)
+            let eodPrice = this._getEODPriceForTicker(clientTrans.unitPrice, ticker, stockEODData)
             if(eodPrice > 0) {
                 portfolioEOD += parseInt(clientTrans.numberOfUnits) * eodPrice
             }
 
         }
-        if(portfolioEOD < 0) {
+        if(portfolioEOD <= 0) {
             return initialPosition;
         }
         let netChange = (portfolioEOD - initialPosition) * 100 / portfolioEOD
         return Math.floor(netChange);
     }
 
-    _getEODPriceForTicker(ticker, stockEODData){
-        let portfolioPosition = 0
+    _getEODPriceForTicker(unitPrice, ticker, stockEODData){
         for(let stockIndex in stockEODData) {
             if(stockEODData[stockIndex].ticker.toLowerCase() === ticker.toLowerCase()){
                 return parseFloat(stockEODData[stockIndex].close)
             }
         }
-        return -1
+        return unitPrice
     }
 
     _netInstrumentPositions(clientTransactionData, above, below, stockEODData){
@@ -210,7 +211,7 @@ export default class EventProcessor {
         for(let clientTransact in clientTransactionData) {
             let clientTrans = clientTransactionData[clientTransact]
             let ticker = clientTrans.ticker
-            let eodPrice = this._getEODPriceForTicker(ticker, stockEODData)
+            let eodPrice = this._getEODPriceForTicker(clientTrans.unitPrice, ticker, stockEODData)
             if(eodPrice > 0) {
                 let diff = parseFloat(eodPrice) - parseFloat(clientTrans.unitPrice)
                 let absDiff = Math.abs(parseFloat(eodPrice) - parseFloat(clientTrans.unitPrice))
