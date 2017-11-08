@@ -25,15 +25,15 @@ clientTransactionSchema.plugin(autoIncrement.plugin, {
 });
 
 clientTransactionSchema.query.byCustomerAndPortfolio = function (cif, portfolioId) {
-    return this.find({ cif: cif, portfolioId: portfolioId });
+    return this.find({ cif: cif, portfolioId: portfolioId }).sort({ 'txnDate': -1 });
 }
 
 clientTransactionSchema.query.pendingTransactionByMobileNumberTickerAndBuySell = function (mobileNumber, ticker, buySell) {
-    return this.find({ mobileNumber: mobileNumber, ticker: ticker, txnStatus: 'pending', BuySell: buySell });
+    return this.find({ mobileNumber: mobileNumber, ticker: ticker, txnStatus: 'pending', BuySell: buySell }).sort({ 'txnDate': -1 });
 }
 
 clientTransactionSchema.query.byCustomerAndPortfolio = function (cif, portfolioId) {
-    return this.find({ cif: cif, portfolioId: portfolioId });
+    return this.find({ cif: cif, portfolioId: portfolioId }).sort({ 'txnDate': -1 });
 }
 
 
