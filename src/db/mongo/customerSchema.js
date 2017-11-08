@@ -4,7 +4,7 @@ var autoIncrement = require('mongoose-auto-increment')
 autoIncrement.initialize(mongoose.connection)
 
 var customerSchema = new mongoose.Schema({
-    cif: String,
+    cif: Number,
     userId: String,
     name: String,
     portfolioId: String,

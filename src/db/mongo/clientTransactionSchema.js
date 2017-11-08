@@ -2,8 +2,8 @@
 var mongoose = require('mongoose')
 var autoIncrement = require('mongoose-auto-increment')
 
-var cleintTransactionSchemaDef = new mongoose.Schema({
-    cif: String,
+var clientTransactionSchema = new mongoose.Schema({
+    cif: Number,
     portfolioId: String,
     mobileNumber:String,
     txnStatus:{type:String},
@@ -17,21 +17,21 @@ var cleintTransactionSchemaDef = new mongoose.Schema({
     amount: Number
 });
 
-cleintTransactionSchemaDef.plugin(autoIncrement.plugin, {
-    model: 'cleintTransactionSchema',
+clientTransactionSchema.plugin(autoIncrement.plugin, {
+    model: 'clientTransactionSchema',
     field: 'txnNumber',
     startAt: 0,
     incrementBy: 1});
 
-cleintTransactionSchemaDef.query.byCustomerAndPortfolio = function (cif, portfolioId) {
+clientTransactionSchema.query.byCustomerAndPortfolio = function (cif, portfolioId) {
     return this.find({ cif: cif, portfolioId: portfolioId , txnStatus: 'completed'});
 }
 
-cleintTransactionSchemaDef.query.pendingTransactionByMobileNumberTickerAndBuySell = function (mobileNumber, ticker, buySell) {
+clientTransactionSchema.query.pendingTransactionByMobileNumberTickerAndBuySell = function (mobileNumber, ticker, buySell) {
     return this.find({ mobileNumber: mobileNumber, ticker: ticker, txnStatus: 'pending', BuySell:buySell});
 }
 
-cleintTransactionSchemaDef.query.byCustomerAndPortfolio = function (cif, portfolioId) {
+clientTransactionSchema.query.byCustomerAndPortfolio = function (cif, portfolioId) {
     return this.find({ cif: cif, portfolioId: portfolioId , txnStatus: 'completed'});
 }
 
@@ -39,13 +39,13 @@ cleintTransactionSchemaDef.query.byCustomerAndPortfolio = function (cif, portfol
 
 
 
-cleintTransactionSchemaDef.query.byDate = function (date) {
+clientTransactionSchema.query.byDate = function (date) {
     return this.find({ txnDate:{$gte: Date(date), $lt:Date(date.setDate(date.getDate() + 1))}, txnStatus: 'completed' });
 }
 
 
 
-var cleintTransactionSchema = mongoose.model('cleintTransactionSchema', cleintTransactionSchemaDef, 'cleintTransactionSchema');
-module.exports = cleintTransactionSchema;
+var clientTransactionSchema = mongoose.model('clientTransactionSchema', clientTransactionSchema, 'clientTransactionSchema');
+module.exports = clientTransactionSchema;
 
 
