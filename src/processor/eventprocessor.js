@@ -77,7 +77,7 @@ export default class EventProcessor {
                     }
                     if(unitsToBuy > 0) {
                         this._executeTransaction(cif, portfolioId, clientMob, 'B', worstInstrument.eod, 'stock', worstInstrument.ticker, unitsToBuy)
-                        portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Buy: ${worstInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                        portfolioAlertMsg = `Your Portolfio is ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Major contributor is ${worstInstrument.ticker} which is currently undervalued. We recommend Buy: ${worstInstrument.ticker} ${unitsToBuy}. Please reply "BUY ${worstInstrument.ticker} ${unitsToBuy}"`
                         logger.log(`sending sms : ${portfolioAlertMsg}`)
                     }
                 }
@@ -95,7 +95,7 @@ export default class EventProcessor {
                     }
                     if(unitsToBuy > 0) {
                         this._executeTransaction(cif, portfolioId, clientMob, 'S', worstInstrument.eod, 'stock', worstInstrument.ticker, unitsToBuy)
-                        portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${worstInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                        portfolioAlertMsg = `Your Portolfio is ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Major contributor is ${worstInstrument.ticker} which is currently undervalued. We recommend:: Sell: ${worstInstrument.ticker} ${unitsToBuy}. Please reply "BUY ${worstInstrument.ticker} ${unitsToBuy}"`
                         logger.log(`sending sms : ${portfolioAlertMsg}`)
                     }
 
@@ -112,7 +112,7 @@ export default class EventProcessor {
                         }
                         if (unitsToBuy > 0) {
                             this._executeTransaction(cif, portfolioId, clientMob, 'S', bestInstrument.eod, 'stock', bestInstrument.ticker, unitsToBuy)
-                            portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                            portfolioAlertMsg = `Your Portolfio is ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}. Best performing stock is ${bestInstrument.ticker}. We recommend to book profit:: Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply Please reply "SELL ${bestInstrument.ticker} ${unitsToBuy}"`
                             logger.log(`sending sms : ${portfolioAlertMsg}`)
                         }
                     }
@@ -132,7 +132,7 @@ export default class EventProcessor {
                     }
                     if(unitsToBuy > 0) {
                         this._executeTransaction(cif, portfolioId, clientMob, 'S', bestInstrument.eod, 'stock', bestInstrument.ticker, unitsToBuy)
-                        portfolioAlertMsg = `Your Portolfio ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Rebalance : Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply y/n`
+                        portfolioAlertMsg = `Your Portolfio is ${upDownMessage} by ${Math.abs(netPortfolioPosition) + '%'}.Best performing stock is ${bestInstrument.ticker}. We recommend to book profit:: Sell: ${bestInstrument.ticker} ${unitsToBuy}. Please reply Please reply "SELL ${bestInstrument.ticker} ${unitsToBuy}"`
                         logger.log(`sending sms : ${portfolioAlertMsg}`)
                     }
                 }
